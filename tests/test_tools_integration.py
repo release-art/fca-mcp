@@ -3,10 +3,10 @@
 import pytest
 import pytest_asyncio
 
-from mcp_fca.adapters.fca_async_adapter import FcaApiAdapter
-from mcp_fca.server.cache.memory import InMemoryCache
-from mcp_fca.server.pagination.orchestrator import PaginationOrchestrator
-from mcp_fca.server.tools.handlers import FirmGetParams, FirmRelatedParams, McpTools, SearchFirmsParams
+from fca_mcp.adapters.fca_async_adapter import FcaApiAdapter
+from fca_mcp.server.cache.memory import InMemoryCache
+from fca_mcp.server.pagination.orchestrator import PaginationOrchestrator
+from fca_mcp.server.tools.handlers import FirmGetParams, FirmRelatedParams, McpTools, SearchFirmsParams
 
 
 @pytest_asyncio.fixture

@@ -5,10 +5,10 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from mcp_fca.adapters.fca_async_adapter import FcaApiAdapter
-from mcp_fca.server.cache.memory import InMemoryCache
-from mcp_fca.server.pagination.orchestrator import PaginationMode, PaginationOrchestrator
-from mcp_fca.server.toon.formatter import ToonFormatter
+from fca_mcp.adapters.fca_async_adapter import FcaApiAdapter
+from fca_mcp.server.cache.memory import InMemoryCache
+from fca_mcp.server.pagination.orchestrator import PaginationMode, PaginationOrchestrator
+from fca_mcp.server.toon.formatter import ToonFormatter
 
 
 class SearchFirmsParams(BaseModel):

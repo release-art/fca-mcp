@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from mcp_fca.server.guards.limits import DataSizeGuard, RateLimitGuard, TimeoutGuard
+from fca_mcp.server.guards.limits import DataSizeGuard, RateLimitGuard, TimeoutGuard
 
 
 @pytest.fixture

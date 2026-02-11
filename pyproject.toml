@@ -8,8 +8,8 @@
 #
 #     https://packaging.python.org/en/latest/tutorials/packaging-projects/
 #
-name = "fca-api"
-description = "Python client library for the UK Financial Services (FCA) Register RESTful API"
+name = "fca-mcp"
+description = "MCP server for the UK Financial Services (FCA) Register RESTful API"
 
 authors = [
     {name = "I. Orlovs", email = "ilja@release.art"},
@@ -26,10 +26,11 @@ requires-python = ">=3.11"
 license = "MPL-2.0"
 
 dependencies = [
-    "httpx>=0.28.1",
     "pydantic>=2.12.5",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
+    "typer>=0.21.2",
+    "fca-api>=1.0.0",
 ]
 
 readme = "README.md"
@@ -133,7 +134,7 @@ line-ending = "lf"
 order-by-type = true
 combine-as-imports = true
 force-wrap-aliases = true
-known-first-party = ["fca_api"]
+known-first-party = ["fca_mcp"]
 forced-separate = ["tests"]
 
 [tool.pdm.scripts]
@@ -143,7 +144,7 @@ unittests = {shell = "make unittests", help = "Run unit tests & measure coverage
 
 [tool.pdm.version]
 source = "file"
-path = "src/fca_api/__version__.py"
+path = "src/fca_mcp/__version__.py"
 
 # For ``pytest`` configuration, including TOML-specific configuration see:
 #

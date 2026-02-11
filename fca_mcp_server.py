@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 from datetime import datetime
 
-from mcp_fca.server.main import create_server
+from fca_mcp.server.main import create_server
 
 # Try to import FastAPI for HTTP mode
 try:

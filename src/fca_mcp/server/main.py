@@ -7,13 +7,13 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from mcp_fca.adapters.fca_async_adapter import FcaApiAdapter
-from mcp_fca.server.cache.memory import InMemoryCache
-from mcp_fca.server.guards.limits import DataSizeGuard, RateLimitGuard, TimeoutGuard
-from mcp_fca.server.oauth.middleware import OAuthMiddleware, OAuthRegistry
-from mcp_fca.server.pagination.orchestrator import PaginationOrchestrator
-from mcp_fca.server.tools.handlers import FirmGetParams, FirmRelatedParams, McpTools, SearchFirmsParams
-from mcp_fca.server.tracking.tracker import UsageTracker
+from fca_mcp.adapters.fca_async_adapter import FcaApiAdapter
+from fca_mcp.server.cache.memory import InMemoryCache
+from fca_mcp.server.guards.limits import DataSizeGuard, RateLimitGuard, TimeoutGuard
+from fca_mcp.server.oauth.middleware import OAuthMiddleware, OAuthRegistry
+from fca_mcp.server.pagination.orchestrator import PaginationOrchestrator
+from fca_mcp.server.tools.handlers import FirmGetParams, FirmRelatedParams, McpTools, SearchFirmsParams
+from fca_mcp.server.tracking.tracker import UsageTracker
 
 
 class McpServer:

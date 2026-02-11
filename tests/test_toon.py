@@ -2,7 +2,7 @@
 
 import pytest
 
-from mcp_fca.server.toon.formatter import ToonFormatter
+from fca_mcp.server.toon.formatter import ToonFormatter
 
 
 @pytest.fixture

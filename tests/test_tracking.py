@@ -2,7 +2,7 @@
 
 import pytest
 
-from mcp_fca.server.tracking.tracker import UsageTracker
+from fca_mcp.server.tracking.tracker import UsageTracker
 
 
 @pytest.fixture

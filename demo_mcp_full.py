@@ -12,7 +12,7 @@ import json
 from typing import Any
 from datetime import datetime
 
-from mcp_fca.server.main import create_server
+from fca_mcp.server.main import create_server
 
 
 def print_header(title: str, char: str = "=", width: int = 100) -> None:

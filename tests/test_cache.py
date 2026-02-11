@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from mcp_fca.server.cache.memory import InMemoryCache
+from fca_mcp.server.cache.memory import InMemoryCache
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@
 import pytest
 import pytest_asyncio
 
-from mcp_fca.server.oauth.middleware import OAuthRegistry
+from fca_mcp.server.oauth.middleware import OAuthRegistry
 
 
 @pytest.fixture

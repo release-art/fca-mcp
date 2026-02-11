@@ -3,8 +3,8 @@
 import time
 from typing import Any
 
-from mcp_fca.models.meta import ResponseMeta
-from mcp_fca.models.toon import ToonResponse
+from fca_mcp.models.meta import ResponseMeta
+from fca_mcp.models.toon import ToonResponse
 
 
 class ToonFormatter:

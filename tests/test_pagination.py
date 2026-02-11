@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from mcp_fca.server.pagination.orchestrator import PaginationMode, PaginationOrchestrator
+from fca_mcp.server.pagination.orchestrator import PaginationMode, PaginationOrchestrator
 
 
 @pytest.fixture
