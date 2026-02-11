@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     """Manage application lifespan - startup and shutdown."""
     global _global_server, _global_assistant, _global_nl_interface
 
-    fca_email = os.getenv("FCA_API_EMAIL")
+    fca_email = os.getenv("FCA_API_USERNAME")
     fca_key = os.getenv("FCA_API_KEY")
 
     if not fca_email or not fca_key:
@@ -312,3 +312,8 @@ async def get_stats():
         raise HTTPException(status_code=503, detail="Server not initialized")
 
     return _global_server.get_usage_stats()
+
+
+def get_fastapi_app() -> FastAPI:
+    """Get the FastAPI application instance."""
+    return app

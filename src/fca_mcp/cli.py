@@ -484,12 +484,12 @@ class FcaMcpServerRunner:
         logger.info("%s", "=" * 100)
         logger.info("")
 
-        fca_email = os.getenv("FCA_API_EMAIL")
+        fca_email = os.getenv("FCA_API_USERNAME")
         fca_key = os.getenv("FCA_API_KEY")
 
         if not fca_email or not fca_key:
             logger.error("[ERROR] Missing FCA API credentials!")
-            logger.error("Set FCA_API_EMAIL and FCA_API_KEY in .env file")
+            logger.error("Set FCA_API_USERNAME and FCA_API_KEY in .env file")
             return
 
         logger.info("[INIT] Connecting to FCA API...")
@@ -499,7 +499,9 @@ class FcaMcpServerRunner:
         logger.info("")
 
         try:
-            self.server = await create_server(fca_email=fca_email, fca_key=fca_key, enable_auth=enable_auth)
+            self.server = await fca_mcp.server.main.create_server(
+                fca_email=fca_email, fca_key=fca_key, enable_auth=enable_auth
+            )
 
             self.assistant = FcaAiAssistant(self.server)
             self.nl_interface = NaturalLanguageInterface(self.assistant)
@@ -852,7 +854,7 @@ app = typer.Typer(pretty_exceptions_enable=False)
 def startup(ctx: typer.Context):
     """Startup callback that runs before any command."""
     fca_mcp.logging.configure()
-    logger.info("Flow Shelf CLI started.")
+    logger.info("Fca Mcp CLI started.")
 
 
 @app.command()
@@ -861,17 +863,17 @@ def main_http_mode(host: str = "0.0.0.0", port: int = 8000) -> None:
     logger.info("[HTTP] Starting server on %s:%s", host, port)
     logger.info(
         "[HTTP] Web UI: http://%s:%s",
-        args.host if args.host != "0.0.0.0" else "localhost",
+        host,
         port,
     )
     logger.info(
         "[HTTP] API Docs: http://%s:%s/docs",
-        args.host if args.host != "0.0.0.0" else "localhost",
+        host,
         port,
     )
 
     # uvicorn.run manages its own event loop
-    uvicorn.run(app, host=host, port=port, log_level="info")
+    uvicorn.run("fca_mcp.uvcorn_app:get_fastapi_app", host=host, port=port, log_level="info", factory=True)
 
 
 @app.command()

@@ -257,7 +257,7 @@ async def create_server(
     Returns:
         Initialized server
     """
-    email = fca_email or os.getenv("FCA_API_EMAIL")
+    email = fca_email or os.getenv("FCA_API_USERNAME")
     key = fca_key or os.getenv("FCA_API_KEY")
 
     if not email or not key:

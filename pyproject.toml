@@ -135,9 +135,7 @@ known-first-party = ["fca_mcp"]
 forced-separate = ["tests"]
 
 [tool.pdm.scripts]
-doc = {shell = "make doc", help="Build sphynx docs"}
-lint = {shell = "make lint", help = "Lint source with Ruff"}
-unittests = {shell = "make unittests", help = "Run unit tests & measure coverage"}
+fca-mcp = {shell = "python -m fca_mcp"}
 
 [tool.pdm.version]
 source = "file"
