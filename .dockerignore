@@ -1,0 +1,59 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+dist
+build
+.eggs
+.pytest_cache
+.coverage
+htmlcov
+coverage.xml
+
+# Virtual environments
+.venv
+venv
+ENV
+env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# PDM
+.pdm-python
+.pdm-build
+
+# Documentation (build artifacts)
+docs/_build
+docs/_static
+docs/_templates
+
+# Test files (not needed in production)
+test_*.py
+demo_*.py
+
+# Local development files
+.env.local
+.env.development
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
