@@ -13,7 +13,6 @@ description = "Python client library for the UK Financial Services (FCA) Registe
 
 authors = [
     {name = "I. Orlovs", email = "ilja@release.art"},
-    {name = "S. R. Murthy", email = "s.murthy@tutanota.com"},
 ]
 
 maintainers = [
@@ -35,30 +34,8 @@ dependencies = [
 
 readme = "README.md"
 
-keywords = [
-    "financial conduct authority",
-    "FCA",
-    "financial data",
-    "financial regulation",
-    "financial services register",
-    "financial services",
-    "prudential regulation authority",
-    "regulated markets",
-    "restful api",
-    "uk",
-    "united kingdom",
-]
-
 classifiers = [
-        "Environment :: Console",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3.13",
-        "Development Status :: 4 - Beta",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: MacOS",
-        "Operating System :: Microsoft :: Windows",
+    "Private :: Do Not Upload"
 ]
 
 [project.optional-dependencies]

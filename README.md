@@ -1,284 +1,418 @@
-# fca-api
+# MCP Server for FCA Register API
 
-[![CI](https://github.com/release-art/fca-api/actions/workflows/ci.yml/badge.svg)](https://github.com/release-art/fca-api/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/release-art/fca-api/actions/workflows/codeql.yml/badge.svg)](https://github.com/release-art/fca-api/actions/workflows/codeql.yml)
-[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
-[![PyPI version](https://img.shields.io/pypi/v/fca-api?logo=python&color=41bb13)](https://pypi.org/project/fca-api)
+Production-grade Model Context Protocol (MCP) server that exposes UK FCA Financial Services Register data to LLM clients through a structured, efficient API.
 
-A comprehensive async Python client library for the UK Financial Conduct Authority's [Financial Services Register](https://register.fca.org.uk/s/) [RESTful API](https://register.fca.org.uk/Developer/s/).
+## Features
 
-## Overview
+- **3 Focused Tools**: Minimal tool count for maximum efficiency
+  - `search_firms`: Search for financial firms
+  - `firm_get`: Get firm details with optional quick includes
+  - `firm_related`: Universal access to all firm-related data
+  
+- **OAuth2 Authentication**: Bearer token authentication for LLM clients
+- **TOON Format**: Structured Type-Object-Object-Namespace responses
+- **Smart Pagination**: Preview and full modes with automatic truncation
+- **Usage Tracking**: Comprehensive metrics and event logging
+- **Caching**: In-memory cache with TTL support
+- **Rate Limiting**: Configurable request limits per client
+- **Timeout Guards**: Protection against slow endpoints
+- **Production Ready**: Comprehensive tests, Docker support
 
-This package provides both high-level and low-level asynchronous interfaces to interact with the FCA's Financial Services Register API. It offers type-safe, well-documented access to query information about:
+## Architecture
 
-- **Financial firms** and their comprehensive details
-- **Individual professionals** in the financial services industry  
-- **Investment funds** and collective investment schemes
-- **Regulatory permissions** and restrictions
-- **Disciplinary actions** and enforcement history
-- **Regulated markets** and trading venues
-
-> **Note:** This is an async fork of the [`financial-services-register-api`](https://github.com/sr-murthy/financial-services-register-api) package, completely rewritten for modern async/await patterns with comprehensive type safety and documentation.
-
-## Requirements
-
-- Python 3.11 or higher
-- httpx library for async HTTP requests
-- pydantic for data validation and parsing
-
-## Installation
-
-Install from PyPI using pip:
-
-```bash
-pip install fca-api
+```
+LLM Client
+    ↓ MCP Protocol + OAuth Bearer Token
+┌─────────────────────────────────────┐
+│         MCP Server                  │
+│  ─────────────────────────────────  │
+│  OAuth Middleware                   │
+│  Rate Limiter                       │
+│  Tool Router                        │
+│  ├─ search_firms                    │
+│  ├─ firm_get                        │
+│  └─ firm_related (unified)          │
+│  Pagination Orchestrator            │
+│  TOON Formatter                     │
+│  Cache Layer                        │
+│  Usage Tracker                      │
+└──────────────┬──────────────────────┘
+               ↓
+        fca-api (async)
+               ↓
+        FCA Register API
 ```
 
 ## Quick Start
 
-Here's a simple example to get you started with the high-level client:
+### Prerequisites
+
+- Python 3.11+
+- FCA Register API credentials
+- Docker (optional)
+
+### Installation
+
+```bash
+pip install -e .
+```
+
+### Configuration
+
+Create `.env` file:
+
+```bash
+FCA_API_EMAIL=your_email@example.com
+FCA_API_KEY=your_api_key
+```
+
+### Basic Usage
 
 ```python
 import asyncio
-import fca_api
+from mcp_fca.server.main import create_server
 
 async def main():
-    # Using async context manager (recommended)
-    async with fca_api.async_api.Client(
-        credentials=("your.email@example.com", "your_api_key")
-    ) as client:
+    async with await create_server() as server:
+        client = server.register_client(
+            client_id="my_llm_client",
+            client_secret="secret123",
+            scopes=["read:firms", "search:firms"]
+        )
         
-        # Search for firms by name
-        firms = await client.search_frn("Barclays")
-        print(f"Found {len(firms)} firms matching 'Barclays'")
+        token = server.create_token("my_llm_client", "secret123")
+        auth_header = f"Bearer {token['access_token']}"
         
-        # Iterate through paginated results
-        async for firm in firms:
-            print(f"• {firm.name} (FRN: {firm.frn}) - Status: {firm.status}")
+        result = await server.handle_request(
+            tool="search_firms",
+            params={"query": "barclays", "limit": 5},
+            authorization=auth_header
+        )
         
-        # Get detailed information about a specific firm
-        if len(firms) > 0:
-            firm_details = await client.get_firm(firms[0].frn)
-            print(f"\nFirm Details:")
-            print(f"Name: {firm_details.name}")
-            print(f"Status: {firm_details.status}")
-            print(f"Effective Date: {firm_details.effective_date}")
+        print(result)
 
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
 ```
 
-## Architecture
+## MCP Tools
 
-The library provides two complementary interfaces:
+### 1. search_firms
 
-### High-Level Client (`fca_api.async_api.Client`)
-- **Type-safe**: All responses are validated with Pydantic models
-- **Pagination**: Automatic lazy-loading pagination with `async for` support
-- **Convenient**: Intuitive methods like `search_frn()`, `get_firm()`, etc.
-- **Error handling**: Meaningful exceptions and validation
+Search for firms by name.
 
-### Raw Client (`fca_api.raw_api.RawClient`) 
-- **Direct access**: Minimal abstraction over HTTP API
-- **Flexible**: For advanced use cases and custom processing
-- **Performance**: Lower overhead for bulk operations
-- **Testing**: Ideal for debugging and API exploration
+**Parameters:**
+- `query` (string): Search query
+- `limit` (int): Maximum results (1-50, default: 5)
 
-## Key Features
+**Response:**
+```json
+{
+  "type": "fca.firm.search",
+  "version": "1.0",
+  "data": [
+    {
+      "firm_id": "123456",
+      "firm_name": "Example Firm Ltd",
+      "status": "Authorised",
+      "firm_type": "Limited Company"
+    }
+  ],
+  "meta": {
+    "pages_loaded": 1,
+    "items_returned": 5,
+    "truncated": false,
+    "execution_time_ms": 123.45
+  }
+}
+```
 
-- **Asynchronous Operations**: Built with async/await for efficient concurrent requests
-- **Comprehensive Documentation**: Extensive docstrings and examples for all methods
-- **Type Safety**: Full type annotation support with Pydantic validation
-- **Smart Pagination**: Lazy-loading pagination with automatic page fetching
-- **Robust Error Handling**: Meaningful exceptions with detailed context
-- **High Performance**: Optimized for both single queries and bulk operations
-- **Well Tested**: Comprehensive test suite with response caching
-- **Extensible**: Clean architecture for custom extensions
+### 2. firm_get
 
-## Usage Examples
+Get firm core details with optional quick includes.
 
-### Searching and Pagination
+**Parameters:**
+- `firm_id` (string): FRN (Firm Reference Number)
+- `include` (list[string]): Optional data to include: `["names", "addresses"]`
+- `summary` (bool): Return summary format (default: true)
+
+**Response:**
+```json
+{
+  "type": "fca.firm.details",
+  "version": "1.0",
+  "data": {
+    "firm_id": "123456",
+    "firm_name": "Example Firm Ltd",
+    "status": "Authorised",
+    "firm_type": "Limited Company",
+    "effective_date": "2020-01-01T00:00:00",
+    "names": [...],
+    "addresses": [...]
+  },
+  "meta": {
+    "pages_loaded": 1,
+    "items_returned": 1,
+    "truncated": false,
+    "execution_time_ms": 89.12
+  }
+}
+```
+
+### 3. firm_related
+
+Universal tool for all firm-related data with pagination.
+
+**Parameters:**
+- `firm_id` (string): FRN
+- `kind` (string): Data type - one of:
+  - `names`: Firm names
+  - `addresses`: Addresses
+  - `permissions`: Regulatory permissions
+  - `individuals`: Associated individuals
+  - `history`: Disciplinary history
+  - `passports`: Passport information
+  - `regulators`: Regulators
+  - `requirements`: Requirements
+  - `waivers`: Waivers
+  - `appointed_representatives`: ARs
+  - `controlled_functions`: Controlled functions
+- `mode` (string): `preview` (10 items) or `full` (default: preview)
+- `page` (int): Page number (default: 1)
+- `page_size` (int): Items per page (1-200, default: 50)
+- `max_items` (int): Hard limit (1-1000, default: 200)
+- `summary` (bool): Summary format (default: true)
+
+**Response:**
+```json
+{
+  "type": "fca.firm.permissions",
+  "version": "1.0",
+  "data": [
+    {
+      "permission_name": "Accepting deposits",
+      "status": "Active",
+      "granted_date": "2020-01-01T00:00:00"
+    }
+  ],
+  "meta": {
+    "pages_loaded": 2,
+    "items_returned": 42,
+    "truncated": false,
+    "total_available": 42,
+    "execution_time_ms": 234.56
+  }
+}
+```
+
+## Authentication
+
+### Register Client
 
 ```python
-import fca_api
-
-async with fca_api.async_api.Client(credentials=("email", "key")) as client:
-    # Search returns a lazy-loading paginated list
-    results = await client.search_frn("revolution")
-    
-    # Check total results without loading all pages
-    print(f"Total results: {len(results)}")
-    
-    # Access specific items by index (loads pages as needed)
-    first_result = results[0]
-    
-    # Iterate through all results efficiently
-    async for firm in results:
-        print(f"{firm.name} - {firm.status}")
-    
-    # Or load all pages at once for bulk processing
-    await results.fetch_all_pages()
+client = server.register_client(
+    client_id="llm_client_1",
+    client_secret="secure_secret",
+    scopes=["read:firms", "search:firms"]
+)
 ```
 
-### Firm Information
+### Create Token
 
 ```python
-# Get comprehensive firm details
-firm = await client.get_firm("123456")  # Using FRN
-print(f"Firm: {firm.name}")
-print(f"Status: {firm.status}")
-
-# Get related information
-addresses = await client.get_firm_addresses("123456")
-permissions = await client.get_firm_permissions("123456")
-individuals = await client.get_firm_individuals("123456")
-
-async for address in addresses:
-    print(f"Address: {', '.join(address.address_lines)}")
+token = server.create_token(
+    client_id="llm_client_1",
+    client_secret="secure_secret"
+)
 ```
 
-### Individual and Fund Searches
+### Make Request
 
 ```python
-# Search for individuals
-individuals = await client.search_irn("John Smith")
-async for person in individuals:
-    print(f"{person.name} (IRN: {person.irn})")
-
-# Search for funds/products
-funds = await client.search_prn("Vanguard")
-async for fund in funds:
-    print(f"{fund.name} (PRN: {fund.prn})")
+result = await server.handle_request(
+    tool="search_firms",
+    params={"query": "test"},
+    authorization=f"Bearer {token['access_token']}"
+)
 ```
 
-### Error Handling
+## Docker Usage
 
-```python
-import fca_api.exc
+### Build and Run
 
-try:
-    firm = await client.get_firm("invalid_frn")
-except fca_api.exc.FcaRequestError as e:
-    print(f"API request failed: {e}")
-except fca_api.exc.FcaBaseError as e:
-    print(f"General API error: {e}")
+```bash
+cp .env.example .env
+docker-compose up --build
 ```
+
+### Run Tests in Docker
+
+```bash
+docker-compose --profile test up test-runner
+```
+
+## Testing
+
+### Run All Tests
+
+```bash
+pdm run pytest mcp_fca/tests/ -v
+```
+
+### Run Specific Test File
+
+```bash
+pdm run pytest mcp_fca/tests/test_oauth.py -v
+```
+
+### With Coverage
+
+```bash
+pdm run pytest mcp_fca/tests/ --cov=mcp_fca --cov-report=html
+```
+
+## Configuration
 
 ### Rate Limiting
 
 ```python
-from asyncio_throttle import Throttler
-
-# Limit to 10 requests per second
-throttler = Throttler(rate_limit=10)
-
-async with fca_api.async_api.Client(
-    credentials=("email", "key"),
-    api_limiter=throttler
-) as client:
-    # All requests will be automatically rate limited
-    results = await client.search_frn("test")
-```
-
-## Raw Client Usage
-
-For advanced use cases or when you need direct API access:
-
-```python
-import fca_api.raw
-
-client = fca_api.raw_api.RawClient(
-    credentials=("email", "key")
+server = McpServer(
+    fca_credentials=(email, key),
+    enable_rate_limiting=True
 )
-
-# Direct API calls return raw responses
-response = await client.search_frn("Barclays", page=0)
-
-if response.fca_api_status == "Success":
-    for item in response.data:
-        print(f"Raw data: {item}")
-        
-print(f"Pagination info: {response.result_info}")
+server.rate_limiter = RateLimitGuard(
+    max_requests=100,
+    window_seconds=60
+)
 ```
 
-## AI-Powered Features
-
-This library now includes intelligent analysis and LLM integration capabilities:
-
-### AI Assistant for Data Analysis
+### Cache TTL
 
 ```python
-from ai_assistant import FcaAiAssistant
-
-# Analyze firm risk profile
-analysis = await assistant.analyze_firm_risk("Barclays Bank")
-print(f"Risk Level: {analysis['risk_assessment']['overall_risk']}")
-print(f"Recommendation: {analysis['recommendation']}")
-
-# Compare firms
-comparison = await assistant.compare_firms("Barclays", "HSBC")
-
-# Analyze permissions
-permissions = await assistant.get_firm_permissions_summary("Lloyds")
+server.cache = InMemoryCache(default_ttl=600)
 ```
 
-### LLM Integration for Natural Language Queries
+### Pagination Limits
 
 ```python
-from interactive_ai import NaturalLanguageInterface
-
-# Process natural language queries
-response = await interface.process_query("Is Barclays Bank safe?")
-formatted = interface.format_response(response)
-# LLM can now generate conversational answer
+server.paginator = PaginationOrchestrator(
+    max_items=500,
+    preview_items=20,
+    timeout_seconds=30.0
+)
 ```
 
+## Usage Tracking
 
-## Documentation
-
-The library includes comprehensive documentation:
-
-- **In-code documentation**: All classes and methods have detailed docstrings
-- **Type hints**: Complete type information for IDE support
-- **Examples**: Practical examples in every docstring
-- **API reference**: Auto-generated from docstrings (Sphinx-compatible)
-- **AI Guides**: Complete guides for AI features and LLM integration
-
-Access documentation in your IDE or Python REPL:
+### Get Statistics
 
 ```python
-import fca_api
-help(fca_api.async_api.Client)           # High-level client
-help(fca_api.async_api.Client.search_frn) # Specific method
-help(fca_api.types.firm.FirmDetails) # Response types
+stats = server.get_usage_stats(client_id="llm_client_1")
+print(stats)
 ```
 
-For complete API reference and advanced usage, visit the [full documentation](https://docs.release.art/fca-api/).
+**Output:**
+```python
+{
+    "total_requests": 150,
+    "total_items": 3420,
+    "avg_latency_ms": 145.6,
+    "error_rate": 0.02,
+    "tool_usage": {
+        "search_firms": 50,
+        "firm_get": 60,
+        "firm_related": 40
+    }
+}
+```
 
-## Contributing
+## Error Handling
 
-Contributions are welcome! Please see [contributing guidelines](https://docs.release.art/fca-api/sources/contributing.html) on how to contribute to this project.
+All errors return structured responses:
+
+```json
+{
+  "error": "Rate limit exceeded: 100 requests per 60s",
+  "code": "RATE_LIMIT_EXCEEDED"
+}
+```
+
+**Error Codes:**
+- `AUTH_FAILED`: Authentication failed
+- `RATE_LIMIT_EXCEEDED`: Too many requests
+- `INVALID_PARAMS`: Invalid parameters
+- `TIMEOUT`: Request timed out
+- `UNKNOWN_TOOL`: Tool not found
+- `INTERNAL_ERROR`: Server error
+
+## Project Structure
+
+```
+mcp_fca/
+├── __init__.py
+├── models/              # Pydantic data models
+│   ├── firm.py
+│   ├── meta.py
+│   └── toon.py
+├── adapters/            # External API adapters
+│   └── fca_async_adapter.py
+├── server/
+│   ├── main.py         # Main MCP server
+│   ├── tools/          # Tool handlers
+│   │   └── handlers.py
+│   ├── oauth/          # OAuth authentication
+│   │   └── middleware.py
+│   ├── tracking/       # Usage tracking
+│   │   └── tracker.py
+│   ├── pagination/     # Pagination orchestration
+│   │   └── orchestrator.py
+│   ├── cache/          # Cache layer
+│   │   └── memory.py
+│   ├── guards/         # Rate limits, timeouts
+│   │   └── limits.py
+│   └── toon/           # TOON formatter
+│       └── formatter.py
+└── tests/              # Comprehensive test suite
+    ├── test_oauth.py
+    ├── test_cache.py
+    ├── test_pagination.py
+    ├── test_guards.py
+    ├── test_toon.py
+    └── test_tracking.py
+```
+
+## Development
+
+### Linting
+
+```bash
+pdm run ruff check mcp_fca/
+```
+
+### Auto-format
+
+```bash
+pdm run ruff format mcp_fca/
+```
 
 ## License
 
-This project is licensed under the Mozilla Public License 2.0. See the [LICENSE](LICENSE) file for details.
+Mozilla Public License 2.0 (MPL-2.0)
 
 ## Support
 
-If you encounter any issues or have questions, please:
+For issues related to:
+- **MCP Server**: Open issue in this repository
+- **FCA API Client**: See [fca-api documentation](https://docs.release.art/fca-api/)
+- **FCA Register API**: Contact FCA directly
 
-1. Check the comprehensive in-code documentation with `help()`
-2. Review the [complete documentation](https://docs.release.art/fca-api/)
-3. Search existing [GitHub issues](https://github.com/release-art/fca-api/issues)
-4. Create a new issue if your problem hasn't been addressed
+## Contributing
 
-## API Authentication
+1. Fork the repository
+2. Create feature branch
+3. Make changes with tests
+4. Run test suite
+5. Submit pull request
 
-To use this library, you need API credentials from the FCA Developer Portal:
+## Acknowledgments
 
-1. Visit [FCA Developer Portal](https://register.fca.org.uk/Developer/s/)
-2. Register for an account
-3. Generate API credentials (email and API key)
-4. Use these credentials when initializing the client
-
-**Note**: Keep your API credentials secure and never commit them to version control.
+Built on top of the excellent [fca-api](https://github.com/release-art/fca-api) library.
