@@ -30,7 +30,7 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
     "typer>=0.21.2",
-    "fca-api>=1.0.0",
+    "fca-api>=1.0.1",
 ]
 
 readme = "README.md"
@@ -63,9 +63,6 @@ distribution = true
 
 [tool.pdm.build]
 package-dir = "src"
-includes = [
-    "src/fca_api",
-]
 # File patterns to exclude, the paths are relative to the project root.
 excludes = [
     "docs",
