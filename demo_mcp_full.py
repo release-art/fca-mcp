@@ -9,54 +9,57 @@ Demonstrates:
 """
 import asyncio
 import json
+import logging
 from typing import Any
 from datetime import datetime
 
 from fca_mcp.server.main import create_server
 
+logger = logging.getLogger(__name__)
+
 
 def print_header(title: str, char: str = "=", width: int = 100) -> None:
     """Print formatted header."""
-    print(f"\n{char * width}")
-    print(f"{title:^{width}}")
-    print(f"{char * width}\n")
+    logger.info("\n%s", char * width)
+    logger.info("%s", f"{title:^{width}}")
+    logger.info("%s\n", char * width)
 
 
 def print_section(title: str) -> None:
     """Print formatted section title."""
-    print(f"\n{'─' * 100}")
-    print(f"  [+] {title}")
-    print(f"{'─' * 100}")
+    logger.info("\n%s", "─" * 100)
+    logger.info("  [+] %s", title)
+    logger.info("%s", "─" * 100)
 
 
 def print_toon_response(response: dict[str, Any], limit: int = 5) -> None:
     """Print TOON response in readable format."""
-    print(f"\nType: {response.get('type', 'Unknown')}")
-    print(f"Version: {response.get('version', 'Unknown')}")
+    logger.info("\nType: %s", response.get("type", "Unknown"))
+    logger.info("Version: %s", response.get("version", "Unknown"))
     
     meta = response.get('meta', {})
     if meta:
-        print(f"\n[Stats] Meta Information:")
-        print(f"   Items returned: {meta.get('items_returned', 0)}")
-        print(f"   Pages loaded: {meta.get('pages_loaded', 1)}")
-        print(f"   Truncated: {meta.get('truncated', False)}")
+        logger.info("\n[Stats] Meta Information:")
+        logger.info("   Items returned: %s", meta.get("items_returned", 0))
+        logger.info("   Pages loaded: %s", meta.get("pages_loaded", 1))
+        logger.info("   Truncated: %s", meta.get("truncated", False))
         if meta.get('execution_time_ms'):
-            print(f"   Execution time: {meta.get('execution_time_ms', 0):.2f}ms")
+            logger.info("   Execution time: %.2fms", meta.get("execution_time_ms", 0))
     
     data = response.get('data', [])
     if isinstance(data, list):
-        print(f"\nData: ({len(data)} items, showing first {min(limit, len(data))}):")
+        logger.info("\nData: (%s items, showing first %s):", len(data), min(limit, len(data)))
         for i, item in enumerate(data[:limit], 1):
             try:
-                print(f"\n   {i}. {json.dumps(item, indent=6, ensure_ascii=False, default=str)}")
+                logger.info("\n   %s. %s", i, json.dumps(item, indent=6, ensure_ascii=False, default=str))
             except Exception:
-                print(f"\n   {i}. {item}")
+                logger.info("\n   %s. %s", i, item)
     elif isinstance(data, dict):
-        print(f"\nData:")
+        logger.info("\nData:")
         try:
-            print(f"{json.dumps(data, indent=3, ensure_ascii=False, default=str)}")
+            logger.info("%s", json.dumps(data, indent=3, ensure_ascii=False, default=str))
         except Exception:
-            print(f"{data}")
+            logger.info("%s", data)
 
 
 async def demo_tool_1_search_firms(server: Any) -> None:
@@ -73,9 +76,9 @@ async def demo_tool_1_search_firms(server: Any) -> None:
     
     if 'error' not in result:
         print_toon_response(result)
-        print(f"\n⏱️  Request time: {result.get('meta', {}).get('request_time_ms', 0):.2f}ms")
+        logger.info("\n⏱️  Request time: %.2fms", result.get("meta", {}).get("request_time_ms", 0))
     else:
-        print(f"❌ Error: {result['error']}")
+        logger.error("❌ Error: %s", result["error"])
     
     # Example 2: Search for Revolution
     print_section("Search: 'Revolution' (limit: 3)")
@@ -87,7 +90,7 @@ async def demo_tool_1_search_firms(server: Any) -> None:
     
     if 'error' not in result:
         print_toon_response(result, limit=3)
-        print(f"\n⏱️  Request time: {result.get('meta', {}).get('request_time_ms', 0):.2f}ms")
+        logger.info("\n⏱️  Request time: %.2fms", result.get("meta", {}).get("request_time_ms", 0))
 
 
 async def demo_tool_2_firm_get(server: Any) -> None:
@@ -104,16 +107,16 @@ async def demo_tool_2_firm_get(server: Any) -> None:
     
     if 'error' not in result:
         print_toon_response(result, limit=1)
-        print(f"\n[Time] Request time: {result.get('meta', {}).get('request_time_ms', 0):.2f}ms")
+        logger.info("\n[Time] Request time: %.2fms", result.get("meta", {}).get("request_time_ms", 0))
         
         # Показати структуру даних для LLM
         data = result.get('data', {})
-        print("\n[i] Для LLM доступні поля:")
+        logger.info("\n[i] Для LLM доступні поля:")
         if isinstance(data, dict):
             for key in data.keys():
-                print(f"   - {key}")
+                logger.info("   - %s", key)
     else:
-        print(f"[ERROR] Error: {result['error']}")
+        logger.error("[ERROR] Error: %s", result["error"])
 
 
 async def demo_tool_3_firm_related(server: Any) -> None:
@@ -136,7 +139,7 @@ async def demo_tool_3_firm_related(server: Any) -> None:
     
     if 'error' not in result:
         print_toon_response(result, limit=3)
-        print(f"\n⏱️  Request time: {result.get('meta', {}).get('request_time_ms', 0):.2f}ms")
+        logger.info("\n⏱️  Request time: %.2fms", result.get("meta", {}).get("request_time_ms", 0))
     
     # Приклад 2: Requirements (вимоги)
     print_section(f"Requirements для FRN {firm_id} (перші 2)")
@@ -198,18 +201,18 @@ async def demo_tool_3_firm_related(server: Any) -> None:
         if data:
             print_toon_response(result, limit=2)
         else:
-            print("\n   [OK] Немає дисциплінарної історії (це добре!)")
+            logger.info("\n   [OK] Немає дисциплінарної історії (це добре!)")
 
 
 async def demo_llm_usage(server: Any) -> None:
     """Демонстрація як LLM може використовувати MCP сервер."""
     print_header("LLM USAGE SCENARIO - Як LLM використовує MCP сервер")
     
-    print("\n>>> LLM Prompt: 'Знайди інформацію про Barclays Bank та покажи їх дозволи'")
-    print("\n[AI] LLM виконує:")
+    logger.info("\n>>> LLM Prompt: 'Знайди інформацію про Barclays Bank та покажи їх дозволи'")
+    logger.info("\n[AI] LLM виконує:")
     
     # Крок 1: Пошук фірми
-    print("\n   Крок 1: Викликає search_firms")
+    logger.info("\n   Крок 1: Викликає search_firms")
     result1 = await server.handle_request(
         tool="search_firms",
         params={"query": "Barclays Bank", "limit": 1},
@@ -222,10 +225,10 @@ async def demo_llm_usage(server: Any) -> None:
             firm = data[0]
             frn = firm.get('firm_id')
             name = firm.get('firm_name')
-            print(f"   [+] Знайдено: {name} (FRN: {frn})")
+            logger.info("   [+] Знайдено: %s (FRN: %s)", name, frn)
             
             # Крок 2: Отримати деталі фірми
-            print(f"\n   Крок 2: Викликає firm_get для FRN {frn}")
+            logger.info("\n   Крок 2: Викликає firm_get для FRN %s", frn)
             result2 = await server.handle_request(
                 tool="firm_get",
                 params={"firm_id": frn},
@@ -234,10 +237,10 @@ async def demo_llm_usage(server: Any) -> None:
             
             firm_data = result2.get('data', {}) if 'error' not in result2 else {}
             if firm_data:
-                print(f"   [+] Отримано деталі: {firm_data.get('firm_name', 'N/A')}")
+                logger.info("   [+] Отримано деталі: %s", firm_data.get("firm_name", "N/A"))
             
             # Крок 3: Отримати дозволи
-            print(f"\n   Крок 3: Викликає firm_related для permissions")
+            logger.info("\n   Крок 3: Викликає firm_related для permissions")
             result3 = await server.handle_request(
                 tool="firm_related",
                 params={
@@ -251,22 +254,22 @@ async def demo_llm_usage(server: Any) -> None:
             perms = []
             if 'error' not in result3:
                 perms = result3.get('data', [])
-                print(f"   [+] Знайдено {len(perms)} дозволів:")
+                logger.info("   [+] Знайдено %s дозволів:", len(perms))
                 for i, perm in enumerate(perms[:3], 1):
-                    print(f"      {i}. {perm.get('permission_name', 'Unknown')}")
+                    logger.info("      %s. %s", i, perm.get("permission_name", "Unknown"))
                     if perm.get('customer_types'):
-                        print(f"         Customer types: {perm['customer_types']}")
+                        logger.info("         Customer types: %s", perm["customer_types"])
             
             # Крок 4: LLM формує відповідь
-            print(f"\n   Крок 4: LLM формує відповідь користувачу:")
+            logger.info("\n   Крок 4: LLM формує відповідь користувачу:")
             if firm_data:
-                print(f"\n   ==> '{name} (FRN: {frn}) є {firm_data.get('status', 'N/A')} фірмою.")
+                logger.info("\n   ==> '%s (FRN: %s) є %s фірмою.", name, frn, firm_data.get("status", "N/A"))
                 if perms:
-                    print(f"       Фірма має {len(perms)} регуляторних дозволів, включаючи:")
+                    logger.info("       Фірма має %s регуляторних дозволів, включаючи:", len(perms))
                     for i, perm in enumerate(perms[:3], 1):
-                        print(f"       {i}. {perm.get('permission_name', 'N/A')}")
+                        logger.info("       %s. %s", i, perm.get("permission_name", "N/A"))
             else:
-                print(f"\n   ==> Не вдалося отримати деталі для фірми {name}")
+                logger.info("\n   ==> Не вдалося отримати деталі для фірми %s", name)
 
 
 async def demo_statistics(server: Any) -> None:
@@ -275,40 +278,40 @@ async def demo_statistics(server: Any) -> None:
     
     stats = server.get_usage_stats()
     
-    print("[Stats] Tool Usage:")
-    print(f"   - Total Events: {stats.get('total_events', 0)}")
-    print(f"   - Total Items Returned: {stats.get('total_items_returned', 0)}")
+    logger.info("[Stats] Tool Usage:")
+    logger.info("   - Total Events: %s", stats.get("total_events", 0))
+    logger.info("   - Total Items Returned: %s", stats.get("total_items_returned", 0))
     
     by_tool = stats.get('by_tool', {})
     if by_tool:
-        print(f"\n   By tool:")
+        logger.info("\n   By tool:")
         for tool_name, count in by_tool.items():
-            print(f"      - {tool_name}: {count} calls")
+            logger.info("      - %s: %s calls", tool_name, count)
     
-    print(f"\n[Speed] Performance:")
-    print(f"   - Cache hits: {stats.get('cache_hits', 0)}")
-    print(f"   - Cache misses: {stats.get('cache_misses', 0)}")
+    logger.info("\n[Speed] Performance:")
+    logger.info("   - Cache hits: %s", stats.get("cache_hits", 0))
+    logger.info("   - Cache misses: %s", stats.get("cache_misses", 0))
     cache_hits = stats.get('cache_hits', 0)
     cache_misses = stats.get('cache_misses', 0)
     hit_rate = cache_hits / max(cache_hits + cache_misses, 1) * 100
-    print(f"   - Cache hit rate: {hit_rate:.1f}%")
+    logger.info("   - Cache hit rate: %.1f%%", hit_rate)
     
-    print(f"\n[Security] Security:")
-    print(f"   - OAuth enabled: {stats.get('oauth_enabled', False)}")
-    print(f"   - Rate limiting: Active")
+    logger.info("\n[Security] Security:")
+    logger.info("   - OAuth enabled: %s", stats.get("oauth_enabled", False))
+    logger.info("   - Rate limiting: Active")
 
 
 async def main() -> None:
     """Main demonstration function."""
     print_header("FCA API + MCP SERVER - COMPLETE DEMONSTRATION", "=", 100)
-    print("Demonstration of MCP server with real FCA API data")
-    print("Shows how LLM can use tools to retrieve financial data")
+    logger.info("Demonstration of MCP server with real FCA API data")
+    logger.info("Shows how LLM can use tools to retrieve financial data")
     
     # Server initialization
-    print("\n>> Connecting to FCA API...")
-    print("   Email: developer@release.art")
-    print("   API Key: ************************************")
-    print("   Using real API credentials")
+    logger.info("\n>> Connecting to FCA API...")
+    logger.info("   Email: developer@release.art")
+    logger.info("   API Key: ************************************")
+    logger.info("   Using real API credentials")
     
     server = await create_server(
         fca_email="developer@release.art",
@@ -316,7 +319,7 @@ async def main() -> None:
         enable_auth=False,  # OAuth disabled for demo
     )
     
-    print("[OK] Server initialized successfully!\n")
+    logger.info("[OK] Server initialized successfully!\n")
     
     try:
         # Demonstration of all tools
@@ -332,15 +335,15 @@ async def main() -> None:
         
         # Final message
         print_header("DEMONSTRATION COMPLETE", "=", 100)
-        print("[OK] All tools work correctly")
-        print("[OK] Data is displayed in TOON format")
-        print("[OK] LLM can use MCP server to retrieve financial data")
-        print("\n[i] MCP server is ready for integration with Claude, GPT-4 and other LLMs!")
+        logger.info("[OK] All tools work correctly")
+        logger.info("[OK] Data is displayed in TOON format")
+        logger.info("[OK] LLM can use MCP server to retrieve financial data")
+        logger.info("\n[i] MCP server is ready for integration with Claude, GPT-4 and other LLMs!")
         
     finally:
-        print("\n>> Closing connection to FCA API...")
+        logger.info("\n>> Closing connection to FCA API...")
         await server.close()
-        print("[OK] Connection closed\n")
+        logger.info("[OK] Connection closed\n")
 
 
 if __name__ == "__main__":

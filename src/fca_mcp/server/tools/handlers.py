@@ -1,5 +1,6 @@
 """MCP tool definitions and handlers."""
 
+import logging
 import time
 from typing import Any
 
@@ -9,6 +10,8 @@ from fca_mcp.adapters.fca_async_adapter import FcaApiAdapter
 from fca_mcp.server.cache.memory import InMemoryCache
 from fca_mcp.server.pagination.orchestrator import PaginationMode, PaginationOrchestrator
 from fca_mcp.server.toon.formatter import ToonFormatter
+
+logger = logging.getLogger(__name__)
 
 
 class SearchFirmsParams(BaseModel):

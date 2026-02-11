@@ -1,10 +1,13 @@
 """TOON response models."""
 
+import logging
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from fca_mcp.models.meta import ResponseMeta
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 

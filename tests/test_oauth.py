@@ -1,7 +1,6 @@
 """Tests for OAuth middleware."""
 
 
-
 def test_register_client(oauth_registry, test_client_id, test_client_secret):
     """Test client registration."""
     client = oauth_registry.register_client(

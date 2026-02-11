@@ -1,8 +1,11 @@
 """Firm data models."""
 
+import logging
 from datetime import datetime
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class FirmSearchResult(BaseModel):

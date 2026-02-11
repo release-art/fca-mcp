@@ -1,5 +1,6 @@
 """Main MCP server implementation."""
 
+import logging
 import os
 import time
 from typing import Any
@@ -13,6 +14,8 @@ from fca_mcp.server.oauth.middleware import OAuthMiddleware, OAuthRegistry
 from fca_mcp.server.pagination.orchestrator import PaginationOrchestrator
 from fca_mcp.server.tools.handlers import FirmGetParams, FirmRelatedParams, McpTools, SearchFirmsParams
 from fca_mcp.server.tracking.tracker import UsageTracker
+
+logger = logging.getLogger(__name__)
 
 
 class McpServer:

@@ -1,9 +1,12 @@
 """TOON formatter for MCP responses."""
 
+import logging
 from typing import Any
 
 from fca_mcp.models.meta import ResponseMeta
 from fca_mcp.models.toon import ToonResponse
+
+logger = logging.getLogger(__name__)
 
 
 class ToonFormatter:

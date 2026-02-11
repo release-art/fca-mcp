@@ -1,8 +1,11 @@
 """OAuth2 client authentication."""
 
+import logging
 from datetime import datetime, timedelta
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class OAuthClient(BaseModel):

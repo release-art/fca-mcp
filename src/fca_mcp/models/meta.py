@@ -1,6 +1,10 @@
 """Metadata models for TOON responses."""
 
+import logging
+
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class ResponseMeta(BaseModel):

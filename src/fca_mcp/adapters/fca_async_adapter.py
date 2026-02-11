@@ -1,8 +1,11 @@
 """Async adapter for fca-api library."""
 
+import logging
 from typing import Any
 
 from fca_api import async_api
+
+logger = logging.getLogger(__name__)
 
 
 class FcaApiAdapter:

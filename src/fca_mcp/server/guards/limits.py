@@ -1,9 +1,12 @@
 """Guards for rate limiting, timeouts, and data limits."""
 
 import asyncio
+import logging
 import time
 from collections import defaultdict
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class RateLimitGuard:

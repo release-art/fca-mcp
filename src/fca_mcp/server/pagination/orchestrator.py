@@ -1,7 +1,10 @@
 """Pagination orchestrator for multi-page endpoints."""
 
 import asyncio
+import logging
 from typing import Any, Callable
+
+logger = logging.getLogger(__name__)
 
 
 class PaginationMode:

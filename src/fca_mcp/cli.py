@@ -8,31 +8,19 @@ Run this single file to access all FCA regulatory data analysis features.
 import argparse
 import asyncio
 import json
+import logging
 import os
 import signal
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from fca_mcp.server.main import create_server
+import typer
+import uvicorn
 
-# Try to import FastAPI for HTTP mode
-try:
-    import uvicorn
-    from fastapi import FastAPI, HTTPException
-    from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.responses import HTMLResponse, JSONResponse
-    from pydantic import BaseModel
+import fca_mcp
 
-    FASTAPI_AVAILABLE = True
-except ImportError:
-    FASTAPI_AVAILABLE = False
-    FastAPI = None
-    HTTPException = None
-    JSONResponse = None
-    HTMLResponse = None
-    BaseModel = None
-
+logger = logging.getLogger(__name__)
 
 # ============================================================================
 # AI ASSISTANT - Risk Analysis and Insights
@@ -49,7 +37,7 @@ class FcaAiAssistant:
 
     async def analyze_firm_risk(self, firm_name: str) -> dict[str, Any]:
         """Analyze firm's regulatory risk profile with comprehensive insights."""
-        print(f"\n[AI] Analyzing risk profile for '{firm_name}'...")
+        logger.info("\n[AI] Analyzing risk profile for '%s'...", firm_name)
 
         search_result = await self.server.handle_request(
             tool="search_firms", params={"query": firm_name, "limit": 1}, authorization=None
@@ -66,7 +54,7 @@ class FcaAiAssistant:
         firm_id = firm.get("firm_id")
         firm_status = firm.get("status")
 
-        print(f"   [+] Found: {firm.get('firm_name')} (FRN: {firm_id})")
+        logger.info("   [+] Found: %s (FRN: %s)", firm.get("firm_name"), firm_id)
 
         details_result = await self.server.handle_request(
             tool="firm_get", params={"firm_id": firm_id}, authorization=None
@@ -203,7 +191,7 @@ class FcaAiAssistant:
 
     async def compare_firms(self, firm1_name: str, firm2_name: str) -> dict[str, Any]:
         """Compare two firms side by side."""
-        print(f"\n[AI] Comparing '{firm1_name}' vs '{firm2_name}'...")
+        logger.info("\n[AI] Comparing '%s' vs '%s'...", firm1_name, firm2_name)
 
         analysis1 = await self.analyze_firm_risk(firm1_name)
         await asyncio.sleep(0.5)
@@ -258,7 +246,7 @@ class FcaAiAssistant:
 
     async def get_firm_permissions_summary(self, firm_name: str) -> dict[str, Any]:
         """Get comprehensive permissions summary with analysis."""
-        print(f"\n[AI] Analyzing permissions for '{firm_name}'...")
+        logger.info("\n[AI] Analyzing permissions for '%s'...", firm_name)
 
         search_result = await self.server.handle_request(
             tool="search_firms", params={"query": firm_name, "limit": 1}, authorization=None
@@ -491,24 +479,24 @@ class FcaMcpServerRunner:
 
     async def start(self, enable_auth: bool = False) -> None:
         """Start the MCP server with AI capabilities."""
-        print("=" * 100)
-        print("FCA MCP SERVER WITH AI ANALYSIS")
-        print("=" * 100)
-        print()
+        logger.info("%s", "=" * 100)
+        logger.info("FCA MCP SERVER WITH AI ANALYSIS")
+        logger.info("%s", "=" * 100)
+        logger.info("")
 
         fca_email = os.getenv("FCA_API_EMAIL")
         fca_key = os.getenv("FCA_API_KEY")
 
         if not fca_email or not fca_key:
-            print("[ERROR] Missing FCA API credentials!")
-            print("Set FCA_API_EMAIL and FCA_API_KEY in .env file")
+            logger.error("[ERROR] Missing FCA API credentials!")
+            logger.error("Set FCA_API_EMAIL and FCA_API_KEY in .env file")
             return
 
-        print("[INIT] Connecting to FCA API...")
-        print(f"  Email: {fca_email}")
-        print(f"  API Key: {'*' * 32}")
-        print(f"  Auth: {enable_auth}")
-        print()
+        logger.info("[INIT] Connecting to FCA API...")
+        logger.info("  Email: %s", fca_email)
+        logger.info("  API Key: %s", "*" * 32)
+        logger.info("  Auth: %s", enable_auth)
+        logger.info("")
 
         try:
             self.server = await create_server(fca_email=fca_email, fca_key=fca_key, enable_auth=enable_auth)
@@ -516,36 +504,36 @@ class FcaMcpServerRunner:
             self.assistant = FcaAiAssistant(self.server)
             self.nl_interface = NaturalLanguageInterface(self.assistant)
 
-            print("[OK] Server started successfully!")
-            print()
-            print("Available Features:")
-            print("  [1] MCP Tools: search_firms, firm_get, firm_related")
-            print("  [2] AI Analysis: Risk scoring, firm comparison, insights")
-            print("  [3] NL Interface: Natural language queries for LLMs")
-            print()
+            logger.info("[OK] Server started successfully!")
+            logger.info("")
+            logger.info("Available Features:")
+            logger.info("  [1] MCP Tools: search_firms, firm_get, firm_related")
+            logger.info("  [2] AI Analysis: Risk scoring, firm comparison, insights")
+            logger.info("  [3] NL Interface: Natural language queries for LLMs")
+            logger.info("")
 
         except Exception as e:
-            print(f"[ERROR] Failed to start server: {e}")
+            logger.error("[ERROR] Failed to start server: %s", e)
             raise
 
     async def interactive_mode(self) -> None:
         """Run server in interactive mode with advanced commands."""
-        print("=" * 100)
-        print("INTERACTIVE MODE - Advanced Interface")
-        print("=" * 100)
-        print()
-        print("Commands:")
-        print("  search <query> [limit]        - Search for firms")
-        print("  firm <firm_id>                - Get firm details")
-        print("  related <frn> <kind>          - Get related data")
-        print("  analyze <firm_name>           - AI risk analysis")
-        print("  compare <firm1> vs <firm2>    - Compare two firms")
-        print("  permissions <firm_name>       - Analyze permissions")
-        print("  ask <natural_language>        - Natural language query")
-        print("  stats                         - Show statistics")
-        print("  help                          - Show this help")
-        print("  exit / quit                   - Exit server")
-        print()
+        logger.info("%s", "=" * 100)
+        logger.info("INTERACTIVE MODE - Advanced Interface")
+        logger.info("%s", "=" * 100)
+        logger.info("")
+        logger.info("Commands:")
+        logger.info("  search <query> [limit]        - Search for firms")
+        logger.info("  firm <firm_id>                - Get firm details")
+        logger.info("  related <frn> <kind>          - Get related data")
+        logger.info("  analyze <firm_name>           - AI risk analysis")
+        logger.info("  compare <firm1> vs <firm2>    - Compare two firms")
+        logger.info("  permissions <firm_name>       - Analyze permissions")
+        logger.info("  ask <natural_language>        - Natural language query")
+        logger.info("  stats                         - Show statistics")
+        logger.info("  help                          - Show this help")
+        logger.info("  exit / quit                   - Exit server")
+        logger.info("")
 
         while not self.shutdown_event.is_set():
             try:
@@ -559,7 +547,7 @@ class FcaMcpServerRunner:
                 cmd = parts[0].lower()
 
                 if cmd in ["exit", "quit", "q"]:
-                    print("\n[INFO] Shutting down server...")
+                    logger.info("\n[INFO] Shutting down server...")
                     break
 
                 elif cmd == "help":
@@ -570,7 +558,7 @@ class FcaMcpServerRunner:
 
                 elif cmd == "search":
                     if len(parts) < 2:
-                        print("[ERROR] Usage: search <query> [limit]")
+                        logger.error("[ERROR] Usage: search <query> [limit]")
                         continue
                     query = " ".join(parts[1 : parts.index(parts[-1]) if parts[-1].isdigit() else len(parts)])
                     limit = int(parts[-1]) if parts[-1].isdigit() else 10
@@ -578,26 +566,26 @@ class FcaMcpServerRunner:
 
                 elif cmd == "firm":
                     if len(parts) < 2:
-                        print("[ERROR] Usage: firm <firm_id>")
+                        logger.error("[ERROR] Usage: firm <firm_id>")
                         continue
                     await self.handle_firm(parts[1])
 
                 elif cmd == "related":
                     if len(parts) < 3:
-                        print("[ERROR] Usage: related <frn> <kind>")
+                        logger.error("[ERROR] Usage: related <frn> <kind>")
                         continue
                     await self.handle_related(parts[1], parts[2])
 
                 elif cmd == "analyze":
                     if len(parts) < 2:
-                        print("[ERROR] Usage: analyze <firm_name>")
+                        logger.error("[ERROR] Usage: analyze <firm_name>")
                         continue
                     firm_name = " ".join(parts[1:])
                     await self.handle_analyze(firm_name)
 
                 elif cmd == "compare":
                     if "vs" not in command.lower():
-                        print("[ERROR] Usage: compare <firm1> vs <firm2>")
+                        logger.error("[ERROR] Usage: compare <firm1> vs <firm2>")
                         continue
                     firms = command.lower().split("vs")
                     firm1 = firms[0].replace("compare", "").strip()
@@ -606,225 +594,239 @@ class FcaMcpServerRunner:
 
                 elif cmd == "permissions":
                     if len(parts) < 2:
-                        print("[ERROR] Usage: permissions <firm_name>")
+                        logger.error("[ERROR] Usage: permissions <firm_name>")
                         continue
                     firm_name = " ".join(parts[1:])
                     await self.handle_permissions(firm_name)
 
                 elif cmd == "ask":
                     if len(parts) < 2:
-                        print("[ERROR] Usage: ask <your question>")
+                        logger.error("[ERROR] Usage: ask <your question>")
                         continue
                     question = " ".join(parts[1:])
                     await self.handle_nl_query(question)
 
                 else:
-                    print(f"[ERROR] Unknown command: {cmd}")
-                    print("Type 'help' for available commands")
+                    logger.error("[ERROR] Unknown command: %s", cmd)
+                    logger.error("Type 'help' for available commands")
 
             except KeyboardInterrupt:
-                print("\n[INFO] Interrupt received")
+                logger.info("\n[INFO] Interrupt received")
                 break
             except Exception as e:
-                print(f"[ERROR] Command failed: {e}")
+                logger.error("[ERROR] Command failed: %s", e)
 
         self.shutdown_event.set()
 
     async def handle_search(self, query: str, limit: int) -> None:
         """Handle search command."""
-        print(f"\n[SEARCH] Searching for '{query}' (limit: {limit})...")
+        logger.info("\n[SEARCH] Searching for '%s' (limit: %s)...", query, limit)
 
         result = await self.server.handle_request(
             tool="search_firms", params={"query": query, "limit": limit}, authorization=None
         )
 
         if "error" in result:
-            print(f"[ERROR] {result['error']}")
+            logger.error("[ERROR] %s", result["error"])
             return
 
         data = result.get("data", [])
         meta = result.get("meta", {})
 
-        print(f"\n[OK] Found {meta.get('items_returned', 0)} results")
-        print(f"Execution time: {meta.get('execution_time_ms', 0):.1f}ms")
+        logger.info("\n[OK] Found %s results", meta.get("items_returned", 0))
+        logger.info("Execution time: %.1fms", meta.get("execution_time_ms", 0))
 
         for i, firm in enumerate(data, 1):
-            print(f"  {i}. {firm.get('firm_name')} (FRN: {firm.get('firm_id')}) - {firm.get('status')}")
+            logger.info(
+                "  %s. %s (FRN: %s) - %s",
+                i,
+                firm.get("firm_name"),
+                firm.get("firm_id"),
+                firm.get("status"),
+            )
 
     async def handle_firm(self, firm_id: str) -> None:
         """Handle firm details command."""
-        print(f"\n[FIRM] Getting details for FRN {firm_id}...")
+        logger.info("\n[FIRM] Getting details for FRN %s...", firm_id)
 
         result = await self.server.handle_request(tool="firm_get", params={"firm_id": firm_id}, authorization=None)
 
         if "error" in result:
-            print(f"[ERROR] {result['error']}")
+            logger.error("[ERROR] %s", result["error"])
             return
 
         data = result.get("data", {})
-        print("\n[OK] Firm Details:")
-        print(f"  Name: {data.get('firm_name')}")
-        print(f"  Status: {data.get('status')}")
-        print(f"  Type: {data.get('firm_type')}")
-        print(f"  Companies House: {data.get('companies_house_number', 'N/A')}")
+        logger.info("\n[OK] Firm Details:")
+        logger.info("  Name: %s", data.get("firm_name"))
+        logger.info("  Status: %s", data.get("status"))
+        logger.info("  Type: %s", data.get("firm_type"))
+        logger.info("  Companies House: %s", data.get("companies_house_number", "N/A"))
 
     async def handle_related(self, frn: str, kind: str) -> None:
         """Handle related data command."""
-        print(f"\n[RELATED] Getting {kind} for FRN {frn}...")
+        logger.info("\n[RELATED] Getting %s for FRN %s...", kind, frn)
 
         result = await self.server.handle_request(
             tool="firm_related", params={"firm_id": frn, "kind": kind, "mode": "full"}, authorization=None
         )
 
         if "error" in result:
-            print(f"[ERROR] {result['error']}")
+            logger.error("[ERROR] %s", result["error"])
             return
 
         data = result.get("data", [])
         meta = result.get("meta", {})
 
-        print(f"\n[OK] Retrieved {meta.get('items_returned', 0)} items")
-        print(f"Truncated: {meta.get('truncated', False)}")
+        logger.info("\n[OK] Retrieved %s items", meta.get("items_returned", 0))
+        logger.info("Truncated: %s", meta.get("truncated", False))
 
         for i, item in enumerate(data[:5], 1):
-            print(f"  {i}. {list(item.values())[:3]}")
+            logger.info("  %s. %s", i, list(item.values())[:3])
 
         if len(data) > 5:
-            print(f"  ... and {len(data) - 5} more items")
+            logger.info("  ... and %s more items", len(data) - 5)
 
     async def handle_analyze(self, firm_name: str) -> None:
         """Handle AI risk analysis command."""
         analysis = await self.assistant.analyze_firm_risk(firm_name)
 
         if analysis["status"] == "error":
-            print(f"\n[ERROR] {analysis['message']}")
+            logger.error("\n[ERROR] %s", analysis["message"])
             return
 
-        print(f"\n[AI ANALYSIS] {analysis['firm_name']}")
-        print(f"{'=' * 70}")
-        print(f"Risk Level: {analysis['risk_assessment']['overall_risk']}")
-        print(f"Risk Score: {analysis['risk_assessment']['risk_score']}/100")
-        print("\nRegulatory Status:")
-        print(f"  Status: {analysis['regulatory_status']['status']}")
-        print(f"  Type: {analysis['regulatory_status']['type']}")
-        print(f"  Requirements: {analysis['regulatory_status']['active_requirements']}")
-        print(f"  Disciplinary Actions: {analysis['regulatory_status']['disciplinary_actions']}")
-        print("\nKey Insights:")
+        logger.info("\n[AI ANALYSIS] %s", analysis["firm_name"])
+        logger.info("%s", "=" * 70)
+        logger.info("Risk Level: %s", analysis["risk_assessment"]["overall_risk"])
+        logger.info("Risk Score: %s/100", analysis["risk_assessment"]["risk_score"])
+        logger.info("\nRegulatory Status:")
+        logger.info("  Status: %s", analysis["regulatory_status"]["status"])
+        logger.info("  Type: %s", analysis["regulatory_status"]["type"])
+        logger.info("  Requirements: %s", analysis["regulatory_status"]["active_requirements"])
+        logger.info("  Disciplinary Actions: %s", analysis["regulatory_status"]["disciplinary_actions"])
+        logger.info("\nKey Insights:")
         for insight in analysis["insights"]:
-            print(f"  - {insight}")
-        print("\nRecommendation:")
-        print(f"  {analysis['recommendation']}")
+            logger.info("  - %s", insight)
+        logger.info("\nRecommendation:")
+        logger.info("  %s", analysis["recommendation"])
 
     async def handle_compare(self, firm1: str, firm2: str) -> None:
         """Handle firm comparison command."""
         comparison = await self.assistant.compare_firms(firm1, firm2)
 
         if comparison["status"] == "error":
-            print(f"\n[ERROR] {comparison['message']}")
+            logger.error("\n[ERROR] %s", comparison["message"])
             return
 
-        print("\n[COMPARISON REPORT]")
-        print(f"{'=' * 70}")
-        print(f"\nFirm 1: {comparison['firm_1']['name']}")
-        print(f"  Risk: {comparison['firm_1']['risk_level']} ({comparison['firm_1']['risk_score']}/100)")
-        print(f"  Disciplinary Actions: {comparison['firm_1']['disciplinary_actions']}")
-        print(f"\nFirm 2: {comparison['firm_2']['name']}")
-        print(f"  Risk: {comparison['firm_2']['risk_level']} ({comparison['firm_2']['risk_score']}/100)")
-        print(f"  Disciplinary Actions: {comparison['firm_2']['disciplinary_actions']}")
-        print("\nAnalysis:")
-        print(f"  {comparison['analysis']['similarity']}")
-        print(f"  Lower risk firm: {comparison['analysis']['lower_risk_firm']}")
-        print("\nRecommendation:")
-        print(f"  {comparison['recommendation']}")
+        logger.info("\n[COMPARISON REPORT]")
+        logger.info("%s", "=" * 70)
+        logger.info("\nFirm 1: %s", comparison["firm_1"]["name"])
+        logger.info(
+            "  Risk: %s (%s/100)",
+            comparison["firm_1"]["risk_level"],
+            comparison["firm_1"]["risk_score"],
+        )
+        logger.info("  Disciplinary Actions: %s", comparison["firm_1"]["disciplinary_actions"])
+        logger.info("\nFirm 2: %s", comparison["firm_2"]["name"])
+        logger.info(
+            "  Risk: %s (%s/100)",
+            comparison["firm_2"]["risk_level"],
+            comparison["firm_2"]["risk_score"],
+        )
+        logger.info("  Disciplinary Actions: %s", comparison["firm_2"]["disciplinary_actions"])
+        logger.info("\nAnalysis:")
+        logger.info("  %s", comparison["analysis"]["similarity"])
+        logger.info("  Lower risk firm: %s", comparison["analysis"]["lower_risk_firm"])
+        logger.info("\nRecommendation:")
+        logger.info("  %s", comparison["recommendation"])
 
     async def handle_permissions(self, firm_name: str) -> None:
         """Handle permissions analysis command."""
         result = await self.assistant.get_firm_permissions_summary(firm_name)
 
         if result["status"] == "error":
-            print(f"\n[ERROR] {result['message']}")
+            logger.error("\n[ERROR] %s", result["message"])
             return
 
-        print(f"\n[PERMISSIONS ANALYSIS] {result['firm_name']}")
-        print(f"{'=' * 70}")
-        print(f"Total Permissions: {result['total_permissions']}")
-        print(f"Scope: {result['scope_analysis']['scope']}")
-        print("\nCategories:")
+        logger.info("\n[PERMISSIONS ANALYSIS] %s", result["firm_name"])
+        logger.info("%s", "=" * 70)
+        logger.info("Total Permissions: %s", result["total_permissions"])
+        logger.info("Scope: %s", result["scope_analysis"]["scope"])
+        logger.info("\nCategories:")
         for category, count in result["categories"].items():
             if count > 0:
-                print(f"  {category.capitalize()}: {count}")
-        print("\nInsights:")
+                logger.info("  %s: %s", category.capitalize(), count)
+        logger.info("\nInsights:")
         for insight in result["insights"]:
-            print(f"  - {insight}")
-        print("\nTop 5 Permissions:")
+            logger.info("  - %s", insight)
+        logger.info("\nTop 5 Permissions:")
         for i, perm in enumerate(result["top_permissions"], 1):
-            print(f"  {i}. {perm}")
+            logger.info("  %s. %s", i, perm)
 
     async def handle_nl_query(self, question: str) -> None:
         """Handle natural language query."""
-        print(f"\n[NL QUERY] Processing: '{question}'")
+        logger.info("\n[NL QUERY] Processing: '%s'", question)
 
         response = await self.nl_interface.process_query(question)
         formatted = self.nl_interface.format_response(response)
 
-        print(formatted)
+        logger.info("%s", formatted)
 
     async def print_stats(self) -> None:
         """Print server statistics."""
         stats = self.server.get_usage_stats()
 
-        print("\n[STATISTICS]")
-        print(f"{'=' * 70}")
-        print(f"Total Events: {stats.get('total_events', 0)}")
-        print(f"Total Items: {stats.get('total_items_returned', 0)}")
-        print(f"Cache Hits: {stats.get('cache_hits', 0)}")
-        print(f"Cache Misses: {stats.get('cache_misses', 0)}")
+        logger.info("\n[STATISTICS]")
+        logger.info("%s", "=" * 70)
+        logger.info("Total Events: %s", stats.get("total_events", 0))
+        logger.info("Total Items: %s", stats.get("total_items_returned", 0))
+        logger.info("Cache Hits: %s", stats.get("cache_hits", 0))
+        logger.info("Cache Misses: %s", stats.get("cache_misses", 0))
 
         by_tool = stats.get("by_tool", {})
         if by_tool:
-            print("\nBy Tool:")
+            logger.info("\nBy Tool:")
             for tool, count in by_tool.items():
-                print(f"  {tool}: {count} calls")
+                logger.info("  %s: %s calls", tool, count)
 
     def print_help(self) -> None:
         """Print help message."""
-        print("\n" + "=" * 100)
-        print("AVAILABLE COMMANDS")
-        print("=" * 100)
-        print()
-        print("MCP Tools:")
-        print("  search <query> [limit]        - Search for firms")
-        print("  firm <firm_id>                - Get firm details")
-        print("  related <frn> <kind>          - Get related data (permissions, history, etc.)")
-        print()
-        print("AI Analysis:")
-        print("  analyze <firm_name>           - Comprehensive risk analysis")
-        print("  compare <firm1> vs <firm2>    - Compare two firms")
-        print("  permissions <firm_name>       - Analyze firm permissions")
-        print()
-        print("LLM Integration:")
-        print("  ask <question>                - Natural language query")
-        print("    Examples:")
-        print("      ask What is the risk profile of Barclays?")
-        print("      ask Compare Barclays vs HSBC")
-        print("      ask What permissions does Lloyds have?")
-        print()
-        print("System:")
-        print("  stats                         - Show usage statistics")
-        print("  help                          - Show this help")
-        print("  exit / quit                   - Exit server")
-        print()
-        print("Available data kinds: names, addresses, permissions, individuals, history,")
-        print("                      requirements, waivers, exclusions, passports, regulators,")
-        print("                      appointed_representatives, controlled_functions")
-        print()
+        logger.info("\n%s", "=" * 100)
+        logger.info("AVAILABLE COMMANDS")
+        logger.info("%s", "=" * 100)
+        logger.info("")
+        logger.info("MCP Tools:")
+        logger.info("  search <query> [limit]        - Search for firms")
+        logger.info("  firm <firm_id>                - Get firm details")
+        logger.info("  related <frn> <kind>          - Get related data (permissions, history, etc.)")
+        logger.info("")
+        logger.info("AI Analysis:")
+        logger.info("  analyze <firm_name>           - Comprehensive risk analysis")
+        logger.info("  compare <firm1> vs <firm2>    - Compare two firms")
+        logger.info("  permissions <firm_name>       - Analyze firm permissions")
+        logger.info("")
+        logger.info("LLM Integration:")
+        logger.info("  ask <question>                - Natural language query")
+        logger.info("    Examples:")
+        logger.info("      ask What is the risk profile of Barclays?")
+        logger.info("      ask Compare Barclays vs HSBC")
+        logger.info("      ask What permissions does Lloyds have?")
+        logger.info("")
+        logger.info("System:")
+        logger.info("  stats                         - Show usage statistics")
+        logger.info("  help                          - Show this help")
+        logger.info("  exit / quit                   - Exit server")
+        logger.info("")
+        logger.info("Available data kinds: names, addresses, permissions, individuals, history,")
+        logger.info("                      requirements, waivers, exclusions, passports, regulators,")
+        logger.info("                      appointed_representatives, controlled_functions")
+        logger.info("")
 
     async def shutdown(self) -> None:
         """Shutdown server gracefully."""
         if self.server:
-            print("\n[INFO] Closing server connections...")
+            logger.info("\n[INFO] Closing server connections...")
             await self.server.close()
-            print("[OK] Server closed successfully")
+            logger.info("[OK] Server closed successfully")
 
     async def run(self, interactive: bool = True, enable_auth: bool = False) -> None:
         """Run the complete server."""
@@ -833,368 +835,75 @@ class FcaMcpServerRunner:
         if interactive:
             await self.interactive_mode()
         else:
-            print("[INFO] Running in non-interactive mode")
-            print("[INFO] Press Ctrl+C to stop")
+            logger.info("[INFO] Running in non-interactive mode")
+            logger.info("[INFO] Press Ctrl+C to stop")
             await self.shutdown_event.wait()
 
         await self.shutdown()
 
 
 # ============================================================================
-# HTTP API SERVER - Web Interface
-# ============================================================================
-
-if FASTAPI_AVAILABLE:
-    from contextlib import asynccontextmanager
-
-    # Global server instances
-    _global_server = None
-    _global_assistant = None
-    _global_nl_interface = None
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        """Manage application lifespan - startup and shutdown."""
-        global _global_server, _global_assistant, _global_nl_interface
-
-        fca_email = os.getenv("FCA_API_EMAIL")
-        fca_key = os.getenv("FCA_API_KEY")
-
-        if not fca_email or not fca_key:
-            print("[ERROR] Missing FCA API credentials in environment")
-            yield
-            return
-
-        _global_server = await create_server(fca_email=fca_email, fca_key=fca_key, enable_auth=False)
-
-        _global_assistant = FcaAiAssistant(_global_server)
-        _global_nl_interface = NaturalLanguageInterface(_global_assistant)
-
-        print("[HTTP] Server initialized successfully")
-
-        yield
-
-        if _global_server:
-            await _global_server.close()
-            print("[HTTP] Server closed")
-
-    app = FastAPI(
-        title="FCA MCP Server API",
-        description="HTTP API for FCA regulatory data with AI analysis",
-        version="1.0.0",
-        lifespan=lifespan,
-    )
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    class SearchRequest(BaseModel):
-        query: str
-        limit: int = 10
-
-    class AnalyzeRequest(BaseModel):
-        firm_name: str
-
-    class CompareRequest(BaseModel):
-        firm1: str
-        firm2: str
-
-    class NLQueryRequest(BaseModel):
-        question: str
-
-    @app.get("/", response_class=HTMLResponse)
-    async def root():
-        """Root endpoint with HTML interface."""
-        return """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>FCA MCP Server</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    max-width: 1200px;
-                    margin: 50px auto;
-                    padding: 20px;
-                    background: #f5f5f5;
-                }
-                .header {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 30px;
-                    border-radius: 10px;
-                    margin-bottom: 30px;
-                }
-                .card {
-                    background: white;
-                    padding: 20px;
-                    margin: 20px 0;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-                .endpoint {
-                    background: #f8f9fa;
-                    padding: 15px;
-                    margin: 10px 0;
-                    border-left: 4px solid #667eea;
-                    border-radius: 4px;
-                }
-                .method {
-                    display: inline-block;
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    font-weight: bold;
-                    margin-right: 10px;
-                }
-                .get { background: #61affe; color: white; }
-                .post { background: #49cc90; color: white; }
-                code {
-                    background: #e9ecef;
-                    padding: 2px 6px;
-                    border-radius: 3px;
-                    font-family: monospace;
-                }
-                .feature {
-                    display: inline-block;
-                    background: #667eea;
-                    color: white;
-                    padding: 6px 12px;
-                    margin: 5px;
-                    border-radius: 20px;
-                    font-size: 14px;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>🏛️ FCA MCP Server</h1>
-                <p>AI-Powered UK Financial Conduct Authority Data Analysis</p>
-                <div>
-                    <span class="feature">MCP Protocol</span>
-                    <span class="feature">AI Analysis</span>
-                    <span class="feature">Risk Scoring</span>
-                    <span class="feature">LLM Integration</span>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>📊 System Status</h2>
-                <p>✅ Server is running and ready</p>
-                <p>✅ FCA API connected</p>
-                <p>✅ AI Assistant active</p>
-            </div>
-            
-            <div class="card">
-                <h2>🔌 API Endpoints</h2>
-                
-                <div class="endpoint">
-                    <span class="method get">GET</span>
-                    <code>/health</code>
-                    <p>Health check endpoint</p>
-                </div>
-                
-                <div class="endpoint">
-                    <span class="method get">GET</span>
-                    <code>/docs</code>
-                    <p>Interactive API documentation (Swagger UI)</p>
-                </div>
-                
-                <div class="endpoint">
-                    <span class="method post">POST</span>
-                    <code>/api/search</code>
-                    <p>Search for firms by name</p>
-                    <pre>{"query": "Barclays", "limit": 10}</pre>
-                </div>
-                
-                <div class="endpoint">
-                    <span class="method post">POST</span>
-                    <code>/api/analyze</code>
-                    <p>AI risk analysis of a firm</p>
-                    <pre>{"firm_name": "Barclays Bank"}</pre>
-                </div>
-                
-                <div class="endpoint">
-                    <span class="method post">POST</span>
-                    <code>/api/compare</code>
-                    <p>Compare two firms</p>
-                    <pre>{"firm1": "Barclays", "firm2": "HSBC"}</pre>
-                </div>
-                
-                <div class="endpoint">
-                    <span class="method post">POST</span>
-                    <code>/api/ask</code>
-                    <p>Natural language query</p>
-                    <pre>{"question": "Is Barclays Bank safe?"}</pre>
-                </div>
-                
-                <div class="endpoint">
-                    <span class="method get">GET</span>
-                    <code>/api/stats</code>
-                    <p>Server usage statistics</p>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>📚 Quick Start</h2>
-                <p><strong>1. View API Documentation:</strong></p>
-                <p><a href="/docs" target="_blank">Open Swagger UI</a></p>
-                
-                <p><strong>2. Try an example:</strong></p>
-                <pre>curl -X POST http://localhost:8000/api/search \\
-  -H "Content-Type: application/json" \\
-  -d '{"query": "Barclays", "limit": 5}'</pre>
-            </div>
-            
-            <div class="card">
-                <h2>ℹ️ About</h2>
-                <p>This server provides:</p>
-                <ul>
-                    <li>✅ Complete access to FCA Financial Services Register</li>
-                    <li>✅ AI-powered risk analysis (0-100 scoring)</li>
-                    <li>✅ Firm comparison and insights</li>
-                    <li>✅ Permission categorization and analysis</li>
-                    <li>✅ Natural language query processing</li>
-                    <li>✅ RESTful HTTP API</li>
-                </ul>
-            </div>
-        </body>
-        </html>
-        """
-
-    @app.get("/health")
-    async def health():
-        """Health check endpoint."""
-        return {
-            "status": "healthy",
-            "service": "FCA MCP Server",
-            "version": "1.0.0",
-            "timestamp": datetime.now().isoformat(),
-            "features": {"mcp_tools": True, "ai_analysis": True, "nl_interface": True},
-        }
-
-    @app.post("/api/search")
-    async def search_firms(request: SearchRequest):
-        """Search for firms."""
-        if not _global_server:
-            raise HTTPException(status_code=503, detail="Server not initialized")
-
-        result = await _global_server.handle_request(
-            tool="search_firms", params={"query": request.query, "limit": request.limit}, authorization=None
-        )
-
-        if "error" in result:
-            raise HTTPException(status_code=400, detail=result["error"])
-
-        return result
-
-    @app.post("/api/analyze")
-    async def analyze_firm(request: AnalyzeRequest):
-        """AI risk analysis of a firm."""
-        if not _global_assistant:
-            raise HTTPException(status_code=503, detail="AI Assistant not initialized")
-
-        analysis = await _global_assistant.analyze_firm_risk(request.firm_name)
-
-        if analysis["status"] == "error":
-            raise HTTPException(status_code=404, detail=analysis["message"])
-
-        return analysis
-
-    @app.post("/api/compare")
-    async def compare_firms(request: CompareRequest):
-        """Compare two firms."""
-        if not _global_assistant:
-            raise HTTPException(status_code=503, detail="AI Assistant not initialized")
-
-        comparison = await _global_assistant.compare_firms(request.firm1, request.firm2)
-
-        if comparison["status"] == "error":
-            raise HTTPException(status_code=400, detail=comparison["message"])
-
-        return comparison
-
-    @app.post("/api/ask")
-    async def natural_language_query(request: NLQueryRequest):
-        """Process natural language query."""
-        if not _global_nl_interface:
-            raise HTTPException(status_code=503, detail="NL Interface not initialized")
-
-        response = await _global_nl_interface.process_query(request.question)
-        return response
-
-    @app.get("/api/stats")
-    async def get_stats():
-        """Get server statistics."""
-        if not _global_server:
-            raise HTTPException(status_code=503, detail="Server not initialized")
-
-        return _global_server.get_usage_stats()
-
-
-# ============================================================================
 # MAIN ENTRY POINT
 # ============================================================================
+app = typer.Typer(pretty_exceptions_enable=False)
 
 
-def main_http_mode() -> None:
+@app.callback(invoke_without_command=True)
+def startup(ctx: typer.Context):
+    """Startup callback that runs before any command."""
+    fca_mcp.logging.configure()
+    logger.info("Flow Shelf CLI started.")
+
+
+@app.command()
+def main_http_mode(host: str = "0.0.0.0", port: int = 8000) -> None:
     """Run HTTP server mode (synchronous entry point)."""
-    parser = argparse.ArgumentParser(
-        description="FCA MCP Server - HTTP Mode", formatter_class=argparse.RawDescriptionHelpFormatter
+    logger.info("[HTTP] Starting server on %s:%s", host, port)
+    logger.info(
+        "[HTTP] Web UI: http://%s:%s",
+        args.host if args.host != "0.0.0.0" else "localhost",
+        port,
     )
-    parser.add_argument("--http-mode", action="store_true", required=False)
-    parser.add_argument("--host", default="0.0.0.0", help="HTTP server host (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=8000, help="HTTP server port (default: 8000)")
-    args, _ = parser.parse_known_args()
-
-    if not FASTAPI_AVAILABLE:
-        print("[ERROR] FastAPI not installed. Install with: pip install fastapi uvicorn")
-        sys.exit(1)
-
-    print(f"[HTTP] Starting server on {args.host}:{args.port}")
-    print(f"[HTTP] Web UI: http://{args.host if args.host != '0.0.0.0' else 'localhost'}:{args.port}")
-    print(f"[HTTP] API Docs: http://{args.host if args.host != '0.0.0.0' else 'localhost'}:{args.port}/docs")
+    logger.info(
+        "[HTTP] API Docs: http://%s:%s/docs",
+        args.host if args.host != "0.0.0.0" else "localhost",
+        port,
+    )
 
     # uvicorn.run manages its own event loop
-    uvicorn.run(app, host=args.host, port=args.port, log_level="info")
+    uvicorn.run(app, host=host, port=port, log_level="info")
 
 
-async def main() -> None:
+@app.command()
+async def main(interactive: bool = True, enable_auth: bool = True) -> None:
     """Main entry point for the FCA MCP Server (CLI mode only)."""
-    parser = argparse.ArgumentParser(
-        description="FCA MCP Server with AI Analysis",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python fca_mcp_server.py                    # Interactive mode
-  python fca_mcp_server.py --no-interactive   # Non-interactive mode
-  python fca_mcp_server.py --http-mode        # HTTP server mode
-  python fca_mcp_server.py --enable-auth      # With OAuth authentication
+    # parser = argparse.ArgumentParser(
+    #     description="FCA MCP Server with AI Analysis",
+    #     formatter_class=argparse.RawDescriptionHelpFormatter,
+    #     epilog=textwrap.dedent("""
+    #         Examples:
+    #         python fca_mcp_server.py                    # Interactive mode
+    #         python fca_mcp_server.py --no-interactive   # Non-interactive mode
+    #         python fca_mcp_server.py --http-mode        # HTTP server mode
+    #         python fca_mcp_server.py --enable-auth      # With OAuth authentication
 
-Interactive commands:
-  search Barclays                             # Search for firms
-  firm 122702                                 # Get firm details
-  analyze Barclays Bank                       # AI risk analysis
-  compare Barclays vs HSBC                    # Compare firms
-  ask What is the risk of Barclays?          # Natural language query
+    #         Interactive commands:
+    #         search Barclays                             # Search for firms
+    #         firm 122702                                 # Get firm details
+    #         analyze Barclays Bank                       # AI risk analysis
+    #         compare Barclays vs HSBC                    # Compare firms
+    #         ask What is the risk of Barclays?          # Natural language query
 
-HTTP endpoints:
-  GET  /                                       # Web UI
-  GET  /health                                 # Health check
-  POST /api/search                             # Search firms
-  POST /api/analyze                            # Analyze firm
-  POST /api/compare                            # Compare firms
-  POST /api/ask                                # Natural language query
-        """,
-    )
-    parser.add_argument("--no-interactive", action="store_true", help="Run in non-interactive mode (server only)")
-    parser.add_argument("--enable-auth", action="store_true", help="Enable OAuth2 authentication")
-
-    args = parser.parse_args()
+    #         HTTP endpoints:
+    #         GET  /                                       # Web UI
+    #         GET  /health                                 # Health check
+    #         POST /api/search                             # Search firms
+    #         POST /api/analyze                            # Analyze firm
+    #         POST /api/compare                            # Compare firms
+    #         POST /api/ask                                # Natural language query
+    #     """),
+    # )
+    # args = parser.parse_args()
 
     # CLI mode only
     runner = FcaMcpServerRunner()
@@ -1205,7 +914,7 @@ HTTP endpoints:
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    await runner.run(interactive=not args.no_interactive, enable_auth=args.enable_auth)
+    await runner.run(interactive=interactive, enable_auth=enable_auth)
 
 
 def run_main() -> None:
