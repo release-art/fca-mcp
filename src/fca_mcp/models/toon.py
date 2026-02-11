@@ -1,6 +1,6 @@
 """TOON response models."""
 
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -17,7 +17,7 @@ class ToonResponse(BaseModel, Generic[T]):
 
     model_config = ConfigDict(
         json_encoders={},
-        ser_json_timedelta='iso8601',
+        ser_json_timedelta="iso8601",
     )
 
     type: str = Field(..., description="Type identifier (e.g., 'fca.firm.names')")

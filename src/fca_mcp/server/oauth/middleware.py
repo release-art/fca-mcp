@@ -1,7 +1,6 @@
 """OAuth2 client authentication."""
 
 from datetime import datetime, timedelta
-from typing import Any
 
 from pydantic import BaseModel, Field
 

@@ -1,6 +1,5 @@
 """Main MCP server implementation."""
 
-import asyncio
 import os
 import time
 from typing import Any
@@ -163,9 +162,7 @@ class McpServer:
 
             elif tool == "firm_get":
                 validated_params = FirmGetParams(**params)
-                result, timed_out = await self.timeout_guard.execute_with_timeout(
-                    self.tools.firm_get(validated_params)
-                )
+                result, timed_out = await self.timeout_guard.execute_with_timeout(self.tools.firm_get(validated_params))
 
                 if timed_out:
                     raise TimeoutError("Request timed out")

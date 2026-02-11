@@ -2,7 +2,6 @@
 
 from typing import Any
 
-import fca_api
 from fca_api import async_api
 
 
@@ -289,15 +288,20 @@ class FcaApiAdapter:
             # Get the full model dump to extract dynamic requirement content
             req_dict = req.model_dump()
             # Extract content from dynamic fields (exclude standard fields)
-            standard_fields = {'reference', 'effective_date', 'financial_promotions_requirement', 'financial_promotions_investment_types'}
+            standard_fields = {
+                "reference",
+                "effective_date",
+                "financial_promotions_requirement",
+                "financial_promotions_investment_types",
+            }
             content_fields = {k: v for k, v in req_dict.items() if k not in standard_fields and v}
-            
+
             # Get first content field or use abbreviated version
             content_text = "No content"
             if content_fields:
                 first_content = next(iter(content_fields.values()))
                 content_text = str(first_content)[:200] + "..." if len(str(first_content)) > 200 else str(first_content)
-            
+
             results.append(
                 {
                     "requirement_reference": getattr(req, "reference", "Unknown"),
@@ -409,18 +413,12 @@ class FcaApiAdapter:
             results.append(
                 {
                     "exclusion_type": getattr(exclusion, "exclusion_type", None),
-                    "particular_exclusion_relied_upon": getattr(
-                        exclusion, "particular_exclusion_relied_upon", None
-                    ),
+                    "particular_exclusion_relied_upon": getattr(exclusion, "particular_exclusion_relied_upon", None),
                     "effective_from": (
-                        exclusion.effective_from.isoformat()
-                        if getattr(exclusion, "effective_from", None)
-                        else None
+                        exclusion.effective_from.isoformat() if getattr(exclusion, "effective_from", None) else None
                     ),
                     "effective_to": (
-                        exclusion.effective_to.isoformat()
-                        if getattr(exclusion, "effective_to", None)
-                        else None
+                        exclusion.effective_to.isoformat() if getattr(exclusion, "effective_to", None) else None
                     ),
                 }
             )

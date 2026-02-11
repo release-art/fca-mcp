@@ -1,7 +1,6 @@
 """Test configuration."""
 
 import pytest
-import pytest_asyncio
 
 from fca_mcp.server.oauth.middleware import OAuthRegistry
 

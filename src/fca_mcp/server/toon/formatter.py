@@ -1,6 +1,5 @@
 """TOON formatter for MCP responses."""
 
-import time
 from typing import Any
 
 from fca_mcp.models.meta import ResponseMeta

@@ -1,6 +1,5 @@
 """Tests for OAuth middleware."""
 
-import pytest
 
 
 def test_register_client(oauth_registry, test_client_id, test_client_secret):
