@@ -58,8 +58,8 @@ class FcaMcpServerRunner:
                 fca_email=fca_email, fca_key=fca_key, enable_auth=enable_auth
             )
 
-            self.assistant = FcaAiAssistant(self.server)
-            self.nl_interface = NaturalLanguageInterface(self.assistant)
+            self.assistant = fca_mcp.fca_ai_assistant.FcaAiAssistant(self.server)
+            self.nl_interface = fca_mcp.nli.NaturalLanguageInterface(self.assistant)
 
             logger.info("[OK] Server started successfully!")
             logger.info("")

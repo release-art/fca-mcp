@@ -52,7 +52,7 @@ def main_http_mode(host: str = "0.0.0.0", port: int = 8000) -> None:
 
 
 @app.command()
-def main(interactive: bool = True, enable_auth: bool = True) -> None:
+def main(interactive: bool = True, enable_auth: bool = False) -> None:
     """Main entry point for the FCA MCP Server (CLI mode only)."""
     # parser = argparse.ArgumentParser(
     #     description="FCA MCP Server with AI Analysis",
