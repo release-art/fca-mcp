@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -8,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from fca_mcp.server.main import create_server
+import fca_mcp
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ async def lifespan(app: FastAPI):
         yield
         return
 
-    _global_server = await create_server(fca_email=fca_email, fca_key=fca_key, enable_auth=False)
+    _global_server = await fca_mcp.server.main.create_server(fca_email=fca_email, fca_key=fca_key, enable_auth=False)
 
     _global_assistant = FcaAiAssistant(_global_server)
     _global_nl_interface = NaturalLanguageInterface(_global_assistant)
@@ -245,7 +247,7 @@ async def health():
     return {
         "status": "healthy",
         "service": "FCA MCP Server",
-        "version": "1.0.0",
+        "version": fca_mcp.__version__.__version__,
         "timestamp": datetime.now().isoformat(),
         "features": {"mcp_tools": True, "ai_analysis": True, "nl_interface": True},
     }

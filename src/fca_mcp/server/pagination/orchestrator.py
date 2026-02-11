@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Pagination orchestrator for multi-page endpoints."""
 
 import asyncio

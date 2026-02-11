@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Async adapter for fca-api library."""
 
 import logging

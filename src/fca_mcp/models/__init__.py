@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Pydantic data models for MCP responses."""
 
 import logging

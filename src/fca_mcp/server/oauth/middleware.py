@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """OAuth2 client authentication."""
 
 import logging

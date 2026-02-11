@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """TOON response models."""
 
 import logging

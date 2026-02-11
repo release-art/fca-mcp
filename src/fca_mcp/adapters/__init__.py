@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Adapters for external APIs."""
 
 import logging

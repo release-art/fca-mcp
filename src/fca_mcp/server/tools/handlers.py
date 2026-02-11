@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """MCP tool definitions and handlers."""
 
 import logging

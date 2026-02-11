@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Pagination orchestration for multi-page endpoints."""
 
 import logging

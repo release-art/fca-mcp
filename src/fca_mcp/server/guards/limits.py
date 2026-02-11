@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Guards for rate limiting, timeouts, and data limits."""
 
 import asyncio

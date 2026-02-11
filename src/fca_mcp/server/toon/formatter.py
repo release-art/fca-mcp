@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """TOON formatter for MCP responses."""
 
 import logging

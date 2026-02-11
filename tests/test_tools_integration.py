@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Comprehensive integration tests for MCP tools with real API."""
 
 import pytest

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Main MCP server implementation."""
 
 import logging

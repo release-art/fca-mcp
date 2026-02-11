@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """In-memory cache layer."""
 
 import logging

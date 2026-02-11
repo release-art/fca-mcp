@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Metadata models for TOON responses."""
 
 import logging
