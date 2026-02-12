@@ -3,10 +3,10 @@ from __future__ import annotations
 """Main MCP server implementation."""
 
 import logging
-import os
 import time
 from typing import Any
 
+import fastapi
 from pydantic import ValidationError
 
 from fca_mcp.adapters.fca_async_adapter import FcaApiAdapter
@@ -244,11 +244,7 @@ class McpServer:
         return self.usage_tracker.get_stats(client_id)
 
 
-async def create_server(
-    fca_email: str | None = None,
-    fca_key: str | None = None,
-    enable_auth: bool = True,
-) -> McpServer:
+async def get_mcp_server() -> fastapi.APIRouter:
     """Create and initialize MCP server.
 
     Args:
@@ -259,16 +255,17 @@ async def create_server(
     Returns:
         Initialized server
     """
-    email = fca_email or os.getenv("FCA_API_USERNAME")
-    key = fca_key or os.getenv("FCA_API_KEY")
+    out = fastapi.APIRouter(prefix="/api/fca", tags=["mcp"])
+    # email = fca_email or os.getenv("FCA_API_USERNAME")
+    # key = fca_key or os.getenv("FCA_API_KEY")
 
-    if not email or not key:
-        raise ValueError("FCA API credentials required")
+    # if not email or not key:
+    #     raise ValueError("FCA API credentials required")
 
-    server = McpServer(
-        fca_credentials=(email, key),
-        enable_auth=enable_auth,
-    )
+    # server = McpServer(
+    #     fca_credentials=(email, key),
+    #     enable_auth=enable_auth,
+    # )
 
-    await server.__aenter__()
-    return server
+    # return server
+    return out
