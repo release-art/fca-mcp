@@ -1,9 +1,6 @@
-from __future__ import annotations
-
 """MCP tool implementations."""
 
+from __future__ import annotations
 import logging
-
-logger = logging.getLogger(__name__)
 
 from . import handlers

@@ -1,9 +1,14 @@
+"""MCP server implementation."""
 from __future__ import annotations
 
-"""MCP server implementation."""
-
+import fastmcp
 import logging
 
 logger = logging.getLogger(__name__)
 
-from . import api, cache, guards, main, oauth, pagination, tools, toon, tracking
+from . import firms, deps
+
+def get_server() -> fastmcp.FastMCP:
+    main = fastmcp.FastMCP("fca-api")
+    main.mount(firms.get_server())
+    return main

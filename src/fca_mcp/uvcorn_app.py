@@ -6,7 +6,6 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 
 import fastapi
-import fastapi_mcp
 import toon
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -76,11 +75,7 @@ def get_fastapi_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.middleware("http")(toon_middleware)
-    mcp = fastapi_mcp.FastApiMCP(
-        app,
-        name="Protected MCP",
-        include_tags=["mcp"],
-    )
-    mcp.mount_http()
+    
+    mcp = fca_mcp.server.get_server()
+    app.mount('/mcp', mcp.http_app(path='/'))
     return app

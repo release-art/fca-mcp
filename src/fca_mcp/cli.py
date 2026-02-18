@@ -51,6 +51,11 @@ def serve(host: str = "0.0.0.0", port: int = 8000, reload: bool = False) -> None
         reload=reload,
     )
 
+@app.command()
+def stdio():
+    mcp = fca_mcp.server.get_server()
+    mcp.run()
+
 
 if __name__ == "__main__":
     app()
