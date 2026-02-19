@@ -62,10 +62,10 @@ async def search_frn(
 
 
 @firms_mcp.tool
-async def get_firm(frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep) -> fca_api.types.firm.FirmDetails:
+async def get_firm(frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep) -> types.CleanFirmDetails:
     """Get detailed firm info by FRN"""
     result = await fca_client.get_firm(frn)
-    return result
+    return types.CleanFirmDetails.model_validate(result.model_dump())
 
 
 def get_server() -> fastmcp.FastMCP:

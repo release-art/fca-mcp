@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing
 
+import fca_api
 import pydantic
 
 ModelT = typing.TypeVar("ModelT", bound=pydantic.BaseModel)
@@ -29,13 +30,21 @@ def remove_httpurl_fields(model_cls: typing.Type[pydantic.BaseModel]) -> typing.
     Dynamically creates a new Pydantic model class with all fields from the input model,
     except those whose type is pydantic.HttpUrl.
     """
-    fields = {
-        name: (field.outer_type_, field.field_info)
-        for name, field in model_cls.model_fields.items()
-        if field.annotation is not pydantic.HttpUrl and field.outer_type_ is not pydantic.HttpUrl
-    }
+    fields = {}
+    for name, field in model_cls.model_fields.items():
+        # Remove fields whose annotation is pydantic.HttpUrl
+        if field.annotation is pydantic.HttpUrl:
+            continue
+        # Handle required and default values
+        if field.default is pydantic.fields.PydanticUndefined:
+            fields[name] = (field.annotation, ...)
+        else:
+            fields[name] = (field.annotation, field.default)
     return pydantic.create_model(
         f"{model_cls.__name__}WithoutHttpUrl",
         **fields,
         __base__=pydantic.BaseModel,
     )
+
+
+CleanFirmDetails = remove_httpurl_fields(fca_api.types.firm.FirmDetails)
