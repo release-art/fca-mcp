@@ -4,8 +4,8 @@ THIS_DIR=$(dirname "${BASH_SOURCE[0]}")
 PROJECT_ROOT=$(realpath "${THIS_DIR}/..")
 cd "${PROJECT_ROOT}"
 
-export FCA_API_USERNAME="${FCA_API_USERNAME:-op://Employee/d5fon4y2ftqt6cb3bww4bizoza/username}"
-export FCA_API_KEY="${FCA_API_KEY:-op://Employee/d5fon4y2ftqt6cb3bww4bizoza/api key}"
+export FCA_API_USERNAME="mock-api-username"
+export FCA_API_KEY="mock-api-key"
 
 exec op run --no-masking --  pdm run pytest \
     --cache-clear \
