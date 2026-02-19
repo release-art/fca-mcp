@@ -8,6 +8,7 @@ import fastmcp
 from fastmcp.dependencies import CurrentContext, Depends
 
 import fca_mcp
+import fca_api
 
 from . import types
 
@@ -18,7 +19,7 @@ def get_fca_app(ctx: fastmcp.Context = CurrentContext()) -> fca_mcp.types.FcaApp
     return ctx.lifespan_context["fca_app"]
 
 
-def get_fca_api(fca_app=Depends(get_fca_app)) -> types.CleanFirmDetails:
+def get_fca_api(fca_app=Depends(get_fca_app)) -> fca_api.async_api.Client:
     return fca_app.fca_api
 
 
