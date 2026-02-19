@@ -8,12 +8,11 @@
 #
 #     https://packaging.python.org/en/latest/tutorials/packaging-projects/
 #
-name = "fca-api"
-description = "Python client library for the UK Financial Services (FCA) Register RESTful API"
+name = "fca-mcp"
+description = "MCP server for the UK Financial Services (FCA) Register RESTful API"
 
 authors = [
     {name = "I. Orlovs", email = "ilja@release.art"},
-    {name = "S. R. Murthy", email = "s.murthy@tutanota.com"},
 ]
 
 maintainers = [
@@ -27,38 +26,19 @@ requires-python = ">=3.11"
 license = "MPL-2.0"
 
 dependencies = [
-    "httpx>=0.28.1",
     "pydantic>=2.12.5",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
+    "typer>=0.21.2",
+    "fca-api>=1.0.1",
+    "python-toon>=0.1.3",
+    "fastmcp>=2.14.5",
 ]
 
 readme = "README.md"
 
-keywords = [
-    "financial conduct authority",
-    "FCA",
-    "financial data",
-    "financial regulation",
-    "financial services register",
-    "financial services",
-    "prudential regulation authority",
-    "regulated markets",
-    "restful api",
-    "uk",
-    "united kingdom",
-]
-
 classifiers = [
-        "Environment :: Console",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3.13",
-        "Development Status :: 4 - Beta",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: MacOS",
-        "Operating System :: Microsoft :: Windows",
+    "Private :: Do Not Upload"
 ]
 
 [project.optional-dependencies]
@@ -85,9 +65,6 @@ distribution = true
 
 [tool.pdm.build]
 package-dir = "src"
-includes = [
-    "src/fca_api",
-]
 # File patterns to exclude, the paths are relative to the project root.
 excludes = [
     "docs",
@@ -156,17 +133,15 @@ line-ending = "lf"
 order-by-type = true
 combine-as-imports = true
 force-wrap-aliases = true
-known-first-party = ["fca_api"]
+known-first-party = ["fca_mcp"]
 forced-separate = ["tests"]
 
 [tool.pdm.scripts]
-doc = {shell = "make doc", help="Build sphynx docs"}
-lint = {shell = "make lint", help = "Lint source with Ruff"}
-unittests = {shell = "make unittests", help = "Run unit tests & measure coverage"}
+fca-mcp = {shell = "python -m fca_mcp"}
 
 [tool.pdm.version]
 source = "file"
-path = "src/fca_api/__version__.py"
+path = "src/fca_mcp/__version__.py"
 
 # For ``pytest`` configuration, including TOML-specific configuration see:
 #

@@ -1,1 +1,0 @@
-"""TOON format response formatting."""
