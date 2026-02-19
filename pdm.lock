@@ -5,7 +5,7 @@
 groups = ["default", "build", "dev", "docs", "lint", "user"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:d15bb401d142457505df8c7507b856be8ba47474dc9acc1c7d7c1080bd897332"
+content_hash = "sha256:fbaf28d95dbc0d32470e0329891658626f25401e193b26c1a696fba28f0c3154"
 
 [[metadata.targets]]
 requires_python = ">=3.11"
@@ -89,6 +89,17 @@ dependencies = [
 files = [
     {file = "anyio-4.11.0-py3-none-any.whl", hash = "sha256:0287e96f4d26d4149305414d4e3bc32f0dcd0862365a4bddea19d7a1ec38c4fc"},
     {file = "anyio-4.11.0.tar.gz", hash = "sha256:82a8d0b81e318cc5ce71a5f1f8b5c4e63619620b63141ef8c995fa0db95a57c4"},
+]
+
+[[package]]
+name = "asyncstdlib"
+version = "3.13.1"
+requires_python = "~=3.8"
+summary = "The missing async toolbox"
+groups = ["default"]
+files = [
+    {file = "asyncstdlib-3.13.1-py3-none-any.whl", hash = "sha256:a64da68176af1da8c699026cad98f70b184f82b4cb39739e0b9701a2a7541cf9"},
+    {file = "asyncstdlib-3.13.1.tar.gz", hash = "sha256:f47564b9a3566f8f9172631d88c75fe074b0ce2127963b7265d310df9aeed03a"},
 ]
 
 [[package]]
