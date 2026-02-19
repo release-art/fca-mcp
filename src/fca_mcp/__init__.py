@@ -10,7 +10,6 @@ import logging as std_logging
 
 from . import (
     __version__,
-    adapters,
     cli,
     logging as fca_logging,
     models,

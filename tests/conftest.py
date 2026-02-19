@@ -1,16 +1,8 @@
-from __future__ import annotations
-
 """Test configuration."""
 
+from __future__ import annotations
+
 import pytest
-
-from fca_mcp.server.oauth.middleware import OAuthRegistry
-
-
-@pytest.fixture
-def oauth_registry():
-    """Create OAuth registry."""
-    return OAuthRegistry()
 
 
 @pytest.fixture

@@ -9,6 +9,7 @@ import weakref
 
 import fastmcp
 import fca_api
+from fastmcp.server.lifespan import lifespan
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
@@ -20,18 +21,15 @@ logger = logging.getLogger(__name__)
 from . import deps, firms, types
 
 
-@contextlib.asynccontextmanager
+@lifespan
 async def mcp_lifespan(app: fastmcp.FastMCP):
     fca_email = os.environ["FCA_API_USERNAME"]
     fca_key = os.environ["FCA_API_KEY"]
     client = fca_api.async_api.Client((fca_email, fca_key))
-    app.my_app_ctx = my_app = fca_mcp.types.FcaApp(fca_api=client)
-    deps.main_mcp_server = weakref.ref(app)
     logger.info(f"Server {app} initialized successfully")
     async with client:
-        yield
+        yield {"fca_app": fca_mcp.types.FcaApp(fca_api=client)}
     logger.info("Server shutdown complete")
-    deps.main_mcp_server = None
 
 
 def get_server() -> fastmcp.FastMCP:

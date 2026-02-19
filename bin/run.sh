@@ -16,7 +16,7 @@ export FCA_API_KEY="${FCA_API_KEY:-op://Employee/d5fon4y2ftqt6cb3bww4bizoza/api 
 if [ -n "$*" ]; then
     ARGS=("$@")
 else
-    ARGS=(python -m fca_mcp serve)
+    ARGS=(python -m fca_mcp serve --reload)
 fi
 
 cd "${THIS_DIR}/.."
