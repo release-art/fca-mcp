@@ -9,10 +9,10 @@ import weakref
 
 import fastmcp
 import fca_api
+from fastmcp.server.lifespan import lifespan
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
-from fastmcp.server.lifespan import lifespan
 
 import fca_mcp
 
@@ -28,9 +28,7 @@ async def mcp_lifespan(app: fastmcp.FastMCP):
     client = fca_api.async_api.Client((fca_email, fca_key))
     logger.info(f"Server {app} initialized successfully")
     async with client:
-        yield {
-            'fca_app': fca_mcp.types.FcaApp(fca_api=client)
-        }
+        yield {"fca_app": fca_mcp.types.FcaApp(fca_api=client)}
     logger.info("Server shutdown complete")
 
 
