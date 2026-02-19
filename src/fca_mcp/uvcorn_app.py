@@ -37,9 +37,7 @@ async def lifespan(app: fastapi.FastAPI):
 
     logger.info("Server initialized successfully")
     adapter = fca_mcp.adapters.fca_async_adapter.FcaApiAdapter((fca_email, fca_key))
-    app.my_app_ctx = my_app = fca_mcp.types.FcaApp(
-        fca_api_adapter=adapter, tools=fca_mcp.server.tools.handlers.McpTools(adapter=adapter)
-    )
+    app.my_app_ctx = my_app = fca_mcp.types.FcaApp(fca_api_adapter=adapter)
 
     async with my_app.fca_api_adapter:
         yield
@@ -75,7 +73,7 @@ def get_fastapi_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     mcp = fca_mcp.server.get_server()
-    app.mount('/mcp', mcp.http_app(path='/'))
+    app.mount("/mcp", mcp.http_app(path="/"))
     return app

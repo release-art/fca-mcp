@@ -4,14 +4,12 @@ import dataclasses
 import typing
 
 import fastapi
-
-import fca_mcp
+import fca_api
 
 
 @dataclasses.dataclass(slots=True)
 class FcaApp:
-    fca_api_adapter: fca_mcp.adapters.fca_async_adapter.FcaApiAdapter
-    tools: fca_mcp.server.tools.handlers.McpTools
+    fca_api: fca_api.async_api.Client
 
 
 async def get_fca_app(request: fastapi.Request) -> FcaApp:

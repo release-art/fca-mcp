@@ -51,8 +51,10 @@ def serve(host: str = "0.0.0.0", port: int = 8000, reload: bool = False) -> None
         reload=reload,
     )
 
+
 @app.command()
-def stdio():
+def stdio() -> None:
+    """Run stdio mode (asynchronous entry point)."""
     mcp = fca_mcp.server.get_server()
     mcp.run()
 
