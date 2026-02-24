@@ -5,10 +5,12 @@ from __future__ import annotations
 import logging
 
 import fastmcp
-import fca_api
 from fastmcp.dependencies import CurrentContext, Depends
 
 import fca_mcp
+import fca_api
+
+from . import types
 
 logger = logging.getLogger(__name__)
 

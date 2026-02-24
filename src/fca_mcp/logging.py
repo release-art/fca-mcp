@@ -17,6 +17,7 @@ def get_config() -> dict:
         for name in [
             "azure.core.pipeline.policies.http_logging_policy",
             "docket.worker",
+            "sse_starlette.sse",
         ]
     }
     return {
