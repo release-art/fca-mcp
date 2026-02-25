@@ -5,7 +5,7 @@
 groups = ["default", "build", "dev", "docs", "lint", "user"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:fbaf28d95dbc0d32470e0329891658626f25401e193b26c1a696fba28f0c3154"
+content_hash = "sha256:4fe88a557a308bc4ac7c92aba92c149a611aadc3f71ccfbd432d234dfddd2987"
 
 [[metadata.targets]]
 requires_python = ">=3.11"
@@ -806,7 +806,7 @@ files = [
 
 [[package]]
 name = "fca-api"
-version = "1.0.2"
+version = "1.0.3"
 requires_python = ">=3.11"
 summary = "Python client library for the UK Financial Services (FCA) Register RESTful API"
 groups = ["default"]
@@ -815,8 +815,8 @@ dependencies = [
     "pydantic>=2.12.5",
 ]
 files = [
-    {file = "fca_api-1.0.2-py3-none-any.whl", hash = "sha256:94f6cc9303a69f7f08bedbf0e61bd351d94c8397679d76ded71c64fcf3483f84"},
-    {file = "fca_api-1.0.2.tar.gz", hash = "sha256:05b32416cb257389f771b314aa117cc71322acc0a12b359a4b58c78654a45942"},
+    {file = "fca_api-1.0.3-py3-none-any.whl", hash = "sha256:0eba9b08f15ac5473c83bf52ed37ec5f8a2c6df3d5211fe0b8f4da7b6d03924a"},
+    {file = "fca_api-1.0.3.tar.gz", hash = "sha256:ee6b1ab3310acaf53a76d0d5f7bfcadd763fb0ed1a3aef2efa3ea18861170bdf"},
 ]
 
 [[package]]

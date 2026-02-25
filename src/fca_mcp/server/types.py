@@ -33,6 +33,11 @@ def remove_httpurl_fields(model_cls: typing.Type[pydantic.BaseModel]) -> typing.
     fields = {}
     for name, field in model_cls.model_fields.items():
         # Remove fields whose annotation is pydantic.HttpUrl
+        if any(
+            is
+            annotation in field.metadata
+        )
+        print(field.metadata)
         if field.annotation is pydantic.HttpUrl:
             continue
         # Handle required and default values
@@ -40,6 +45,7 @@ def remove_httpurl_fields(model_cls: typing.Type[pydantic.BaseModel]) -> typing.
             fields[name] = (field.annotation, ...)
         else:
             fields[name] = (field.annotation, field.default)
+    1/0
     return pydantic.create_model(
         f"{model_cls.__name__}WithoutHttpUrl",
         **fields,
