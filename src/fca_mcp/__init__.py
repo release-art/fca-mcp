@@ -12,7 +12,6 @@ from . import (
     __version__,
     cli,
     logging as fca_logging,
-    models,
     server,
     types,
     uvcorn_app,
