@@ -1,10 +1,11 @@
+import pathlib
+
+import fca_api
 import pytest
 import pytest_asyncio
 from fastmcp.client import Client
 
 import fca_mcp
-import fca_api
-import pathlib
 
 
 @pytest.fixture

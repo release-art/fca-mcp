@@ -1,7 +1,6 @@
 import logging
 from typing import Annotated
 
-import asyncstdlib
 import fastmcp
 import fca_api
 import pydantic
@@ -39,7 +38,7 @@ async def search_frn(
         ),
     ] = 20,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> types.PaginatedList[fca_api.types.search.FirmSearchResult]:
+) -> types.list_t.PaginatedList[fca_api.types.search.FirmSearchResult]:
     """
     Search firms by name (or part of name).
 
@@ -47,7 +46,7 @@ async def search_frn(
     """
     out = await fca_client.search_frn(firm_name)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.search.FirmSearchResult](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.search.FirmSearchResult](items=els)
     return out
 
 
@@ -58,7 +57,7 @@ async def search_irn(
     """Search result for an individual from the FCA register"""
     out = await fca_client.search_irn(individual_name)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.search.IndividualSearchResult](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.search.IndividualSearchResult](items=els)
     return out
 
 
@@ -69,7 +68,7 @@ async def search_prn(
     """Search for funds by name"""
     out = await fca_client.search_prn(fund_name)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.search.FundSearchResult](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.search.FundSearchResult](items=els)
     return out
 
 

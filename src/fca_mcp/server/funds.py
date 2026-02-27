@@ -1,10 +1,7 @@
 import logging
-from typing import Annotated
 
-import asyncstdlib
 import fastmcp
 import fca_api
-import pydantic
 
 from . import deps, types
 
@@ -28,7 +25,7 @@ async def get_fund_names(
     """Get fund names by PRN"""
     out = await fca_client.get_fund_names(prn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.products.ProductNameAlias](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.products.ProductNameAlias](items=els)
     return out
 
 
@@ -39,7 +36,7 @@ async def get_fund_subfunds(
     """Get fund sub-funds by PRN"""
     out = await fca_client.get_fund_subfunds(prn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.products.SubFundDetails](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.products.SubFundDetails](items=els)
     return out
 
 

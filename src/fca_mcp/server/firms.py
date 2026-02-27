@@ -1,12 +1,9 @@
 """Search firms"""
 
 import logging
-from typing import Annotated
 
-import asyncstdlib
 import fastmcp
 import fca_api
-import pydantic
 
 from . import deps, types
 
@@ -17,7 +14,7 @@ firms_mcp = fastmcp.FastMCP("search-firms", on_duplicate="error")
 
 
 @firms_mcp.tool
-async def get_firm(frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep) -> types.CleanFirmDetails:
+async def get_firm(frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep):
     """Get detailed firm info by FRN"""
     result = await fca_client.get_firm(frn)
     print(result.model_dump_json(indent=2))
@@ -31,7 +28,7 @@ async def get_firm_names(
     """Get firm names by FRN"""
     out = await fca_client.get_firm_names(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmNameAlias](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmNameAlias](items=els)
     return out
 
 
@@ -42,7 +39,7 @@ async def get_firm_adresses(
     """Get firm addresses by FRN"""
     out = await fca_client.get_firm_addresses(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmAddress](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmAddress](items=els)
     return out
 
 
@@ -53,7 +50,7 @@ async def get_firm_controlled_functions(
     """Get firm controlled functions by FRN"""
     out = await fca_client.get_firm_controlled_functions(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmControlledFunction](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmControlledFunction](items=els)
     return out
 
 
@@ -64,7 +61,7 @@ async def get_firm_individuals(
     """Get firm individuals by FRN"""
     out = await fca_client.get_firm_individuals(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmIndividual](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmIndividual](items=els)
     return out
 
 
@@ -75,7 +72,7 @@ async def get_firm_permissions(
     """Get firm permissions by FRN"""
     out = await fca_client.get_firm_permissions(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmPermission](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmPermission](items=els)
     return out
 
 
@@ -86,7 +83,7 @@ async def get_firm_requirements(
     """Get firm requirements by FRN"""
     out = await fca_client.get_firm_requirements(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmRequirement](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmRequirement](items=els)
     return out
 
 
@@ -97,7 +94,7 @@ async def get_firm_requirement_investment_types(
     """Get investment types for a specific firm requirement"""
     out = await fca_client.get_firm_requirement_invenstment_type(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmRequirementInvestmentType](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmRequirementInvestmentType](items=els)
     return out
 
 
@@ -108,7 +105,7 @@ async def get_firm_regulators(
     """Get firm regulators by FRN"""
     out = await fca_client.get_firm_regulators(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmRegulator](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmRegulator](items=els)
     return out
 
 
@@ -119,7 +116,7 @@ async def get_firm_passports(
     """Get firm passports by FRN"""
     out = await fca_client.get_firm_passports(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmPassport](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmPassport](items=els)
     return out
 
 
@@ -130,7 +127,7 @@ async def get_firm_passport_permissions(
     """Get firm passport permissions by FRN and country"""
     out = await fca_client.get_firm_passport_permissions(frn, country)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmPassportPermission](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmPassportPermission](items=els)
     return out
 
 
@@ -141,7 +138,7 @@ async def get_firm_waivers(
     """Get firm waivers by FRN"""
     out = await fca_client.get_firm_waivers(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmWaiver](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmWaiver](items=els)
     return out
 
 
@@ -152,7 +149,7 @@ async def get_firm_exclusions(
     """"""
     out = await fca_client.get_firm_exclusions(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmExclusion](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmExclusion](items=els)
     return out
 
 
@@ -163,7 +160,7 @@ async def get_firm_disciplinary_history(
     """"""
     out = await fca_client.get_firm_disciplinary_history(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmDisciplinaryRecord](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmDisciplinaryRecord](items=els)
     return out
 
 
@@ -174,7 +171,7 @@ async def get_firm_appointed_representatives(
     """Get firm appointed representatives by FRN"""
     out = await fca_client.get_firm_appointed_representatives(frn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.firm.FirmAppointedRepresentative](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.firm.FirmAppointedRepresentative](items=els)
     return out
 
 

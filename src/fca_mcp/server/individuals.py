@@ -1,10 +1,7 @@
 import logging
-from typing import Annotated
 
-import asyncstdlib
 import fastmcp
 import fca_api
-import pydantic
 
 from . import deps, types
 
@@ -30,7 +27,7 @@ async def get_individual_controlled_functions(
     """Get controlled functions for an individual"""
     out = await fca_client.get_individual_controlled_functions(irn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.individual.IndividualControlledFunction](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.individual.IndividualControlledFunction](items=els)
     return out
 
 
@@ -41,7 +38,7 @@ async def get_individual_disciplinary_history(
     """Get disciplinary history records for an individual"""
     out = await fca_client.get_individual_disciplinary_history(irn)
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.individual.IndividualDisciplinaryRecord](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.individual.IndividualDisciplinaryRecord](items=els)
     return out
 
 

@@ -1,10 +1,7 @@
 import logging
-from typing import Annotated
 
-import asyncstdlib
 import fastmcp
 import fca_api
-import pydantic
 
 from . import deps, types
 
@@ -20,5 +17,5 @@ async def get_regulated_markets(
     """Get regulated markets"""
     out = await fca_client.get_regulated_markets()
     els = out.local_items()
-    out = types.PaginatedList[fca_api.types.markets.RegulatedMarket](items=els)
+    out = types.list_t.PaginatedList[fca_api.types.markets.RegulatedMarket](items=els)
     return out
