@@ -3,10 +3,12 @@ from fastmcp.client import Client
 from fastmcp.client.transports import FastMCPTransport
 import fca_api
 
+
 @pytest.mark.asyncio
 async def test_tools(mcp_client: Client[FastMCPTransport]):
     tools = await mcp_client.list_tools()
     assert len(tools) > 1
+
 
 @pytest.mark.asyncio
 async def test_get_firm(mock_fca_api, resources_dir, mcp_client: Client[FastMCPTransport]):
@@ -19,7 +21,7 @@ async def test_get_firm(mock_fca_api, resources_dir, mcp_client: Client[FastMCPT
         name="get_firm",
         arguments={
             "frn": "123456",
-        }
+        },
     )
     assert len(search_results.items) == 1
     firm = search_results.items[0]
