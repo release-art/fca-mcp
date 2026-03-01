@@ -1,1 +1,1 @@
-from . import base, firm, list_t
+from . import base, firm, list_t, products

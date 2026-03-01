@@ -12,10 +12,10 @@ funds_mcp = fastmcp.FastMCP("search-funds", on_duplicate="error")
 @funds_mcp.tool
 async def get_fund(
     prn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> fca_api.types.products.ProductDetails:
+) -> types.products.ProductDetails:
     """Get fund details by PRN"""
     out = await fca_client.get_fund(prn)
-    return out
+    return types.products.ProductDetails.from_api_t(out)
 
 
 @funds_mcp.tool
