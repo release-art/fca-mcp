@@ -1,6 +1,7 @@
 """Reflections of FCA api firm types"""
 
 import fca_api.types.firm as fca_firm_types
+import pydantic
 
 from . import base
 
@@ -32,6 +33,8 @@ class FirmPermission(base.reflect_fca_api_t(fca_firm_types.FirmPermission)):
 class FirmRequirement(base.reflect_fca_api_t(fca_firm_types.FirmRequirement)):
     """Reflected FirmRequirement model with conversion support"""
 
+    model_config = pydantic.ConfigDict(extra="allow")
+
 
 class FirmRequirementInvestmentType(base.reflect_fca_api_t(fca_firm_types.FirmRequirementInvestmentType)):
     """Reflected FirmRequirementInvestmentType model with conversion support"""
@@ -51,3 +54,15 @@ class FirmPassportPermission(base.reflect_fca_api_t(fca_firm_types.FirmPassportP
 
 class FirmWaiver(base.reflect_fca_api_t(fca_firm_types.FirmWaiver)):
     """Reflected FirmWaiver model with conversion support"""
+
+
+class FirmExclusion(base.reflect_fca_api_t(fca_firm_types.FirmExclusion)):
+    """Reflected FirmExclusion model with conversion support"""
+
+
+class FirmDisciplinaryRecord(base.reflect_fca_api_t(fca_firm_types.FirmDisciplinaryRecord)):
+    """Reflected FirmDisciplinaryRecord model with conversion support"""
+
+
+class FirmAppointedRepresentative(base.reflect_fca_api_t(fca_firm_types.FirmAppointedRepresentative)):
+    """Reflected FirmAppointedRepresentative model with conversion support"""
