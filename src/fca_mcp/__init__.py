@@ -10,10 +10,10 @@ import logging as std_logging
 
 from . import (
     __version__,
+    app,
     cli,
     logging as fca_logging,
     server,
-    app,
     uvcorn_app,
 )
 

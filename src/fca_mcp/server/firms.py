@@ -14,11 +14,10 @@ firms_mcp = fastmcp.FastMCP("search-firms", on_duplicate="error")
 
 
 @firms_mcp.tool
-async def get_firm(frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep):
+async def get_firm(frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep) -> types.firm.FirmDetails:
     """Get detailed firm info by FRN"""
     result = await fca_client.get_firm(frn)
-    print(result.model_dump_json(indent=2))
-    return types.CleanFirmDetails.model_validate(result.model_dump())
+    return types.firm.FirmDetails.from_api_t(result)
 
 
 @firms_mcp.tool

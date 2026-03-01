@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """
 FCA MCP Server with AI Analysis - Complete Production System.
 
 This is the unified server combining MCP protocol, AI analysis, and LLM integration.
 Run this single file to access all FCA regulatory data analysis features.
 """
+
+from __future__ import annotations
 
 import logging
 

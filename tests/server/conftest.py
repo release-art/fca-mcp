@@ -18,6 +18,7 @@ def resources_dir() -> pathlib.Path:
 @pytest.fixture(autouse=True)
 def mock_fca_api(mocker):
     mock_client = mocker.AsyncMock(spec=fca_api.async_api.Client)
+    mock_client.__aenter__.return_value = mock_client
     # Set up mock methods as needed, e.g.:
     # mock_client.search_frn.return_value = ...
     mocker.patch("fca_api.async_api.Client", return_value=mock_client)
