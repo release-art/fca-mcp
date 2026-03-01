@@ -14,7 +14,14 @@ markets_mcp = fastmcp.FastMCP("search-markets", on_duplicate="error")
 async def get_regulated_markets(
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
 ) -> types.list_t.PaginatedList[types.markets.RegulatedMarket]:
-    """Get regulated markets"""
+    """Retrieve the complete list of FCA-recognised regulated markets (exchanges and trading venues).
+
+    Regulated markets are multilateral trading venues where financial instruments are
+    traded under regulated conditions, such as the London Stock Exchange. Use this tool
+    when the user asks about UK-regulated exchanges, trading venues, or wants to verify
+    if a specific market is FCA-recognised. Takes no parameters and returns all regulated
+    markets.
+    """
     out = await fca_client.get_regulated_markets()
     els = out.local_items()
     out = types.list_t.PaginatedList[types.markets.RegulatedMarket](
@@ -23,6 +30,7 @@ async def get_regulated_markets(
         has_next=False,
     )
     return out
+
 
 def get_server() -> fastmcp.FastMCP:
     return markets_mcp

@@ -1,30 +1,54 @@
 import logging
+from typing import Annotated
 
 import fastmcp
 import fca_api
+import pydantic
 
 from . import deps, types
 
 logger = logging.getLogger(__name__)
 
+IrnParam = Annotated[
+    str,
+    pydantic.Field(
+        description=(
+            "The Individual Reference Number (IRN), a unique identifier assigned by the FCA"
+            " to each registered individual. Obtain this by calling search_irn first."
+        ),
+    ),
+]
 
 individuals_mcp = fastmcp.FastMCP("search-individuals", on_duplicate="error")
 
 
 @individuals_mcp.tool
 async def get_individual(
-    irn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    irn: IrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.individual.Individual:
-    """Get individual details by IRN"""
+    """Retrieve detailed information about a specific FCA-registered individual.
+
+    Use this tool when you have an Individual Reference Number (IRN) and need the person's
+    full profile, including their name, status, and associated firms. If you do not have an
+    IRN, call search_irn first with the person's name. Returns core individual details
+    only — use get_individual_controlled_functions for their regulated roles and
+    get_individual_disciplinary_history for any enforcement actions.
+    """
     out = await fca_client.get_individual(irn)
     return types.individual.Individual.from_api_t(out)
 
 
 @individuals_mcp.tool
 async def get_individual_controlled_functions(
-    irn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    irn: IrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.individual.IndividualControlledFunction]:
-    """Get controlled functions for an individual"""
+    """Retrieve the controlled functions held by a specific FCA-registered individual across all associated firms.
+
+    Controlled functions are FCA-approved roles such as Director (CF1), Compliance Oversight
+    (CF10), or Customer Function (CF30). Use this tool to check what regulated roles a person
+    holds or has held, and at which firms. If you do not have an IRN, call search_irn first
+    with the person's name.
+    """
     out = await fca_client.get_individual_controlled_functions(irn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.individual.IndividualControlledFunction](
@@ -37,9 +61,15 @@ async def get_individual_controlled_functions(
 
 @individuals_mcp.tool
 async def get_individual_disciplinary_history(
-    irn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    irn: IrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.individual.IndividualDisciplinaryRecord]:
-    """Get disciplinary history records for an individual"""
+    """Retrieve the disciplinary history of a specific FCA-registered individual.
+
+    Returns records of enforcement actions, prohibitions, fines, or other regulatory
+    sanctions taken against the individual by the FCA. Use this tool when assessing a
+    person's regulatory compliance track record or checking for past sanctions. If you
+    do not have an IRN, call search_irn first with the person's name.
+    """
     out = await fca_client.get_individual_disciplinary_history(irn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.individual.IndividualDisciplinaryRecord](

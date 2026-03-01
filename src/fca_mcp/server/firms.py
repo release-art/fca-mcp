@@ -1,30 +1,53 @@
-"""Search firms"""
+"""FCA-regulated firm lookup tools"""
 
 import logging
+from typing import Annotated
 
 import fastmcp
 import fca_api
+import pydantic
 
 from . import deps, types
 
 logger = logging.getLogger(__name__)
 
+FrnParam = Annotated[
+    str,
+    pydantic.Field(
+        description=(
+            "The Firm Reference Number (FRN), a unique numeric identifier assigned by the FCA"
+            " to each regulated firm. Obtain this by calling search_frn first. Example: '122702'."
+        ),
+    ),
+]
 
 firms_mcp = fastmcp.FastMCP("search-firms", on_duplicate="error")
 
 
 @firms_mcp.tool
-async def get_firm(frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep) -> types.firm.FirmDetails:
-    """Get detailed firm info by FRN"""
+async def get_firm(frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep) -> types.firm.FirmDetails:
+    """Retrieve detailed regulatory information about a specific FCA-regulated firm.
+
+    Use this tool when you have a Firm Reference Number (FRN) and need the firm's full
+    profile, including its registered name, current status, and core regulatory details.
+    If you do not have an FRN, call search_frn first with the firm name. Returns core
+    firm details only — use the other get_firm_* tools for specific aspects like
+    permissions, individuals, addresses, or disciplinary history.
+    """
     result = await fca_client.get_firm(frn)
     return types.firm.FirmDetails.from_api_t(result)
 
 
 @firms_mcp.tool
 async def get_firm_names(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[fca_api.types.firm.FirmNameAlias]:
-    """Get firm names by FRN"""
+    """Retrieve all registered names and trading name aliases for a specific FCA-regulated firm.
+
+    Use this tool to find alternative, former, or trading names a firm has used. Useful
+    for verifying whether two different names refer to the same regulated entity. If you
+    do not have an FRN, call search_frn first with the firm name.
+    """
     out = await fca_client.get_firm_names(frn)
     els = out.local_items()
     return types.list_t.PaginatedList[types.firm.FirmNameAlias](
@@ -34,9 +57,14 @@ async def get_firm_names(
 
 @firms_mcp.tool
 async def get_firm_adresses(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmAddress]:
-    """Get firm addresses by FRN"""
+    """Retrieve all registered addresses for a specific FCA-regulated firm, including current and historical addresses.
+
+    Use this tool when you need a firm's physical location, correspondence address, or
+    want to trace address changes over time. If you do not have an FRN, call search_frn
+    first with the firm name.
+    """
     out = await fca_client.get_firm_addresses(frn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmAddress](
@@ -47,9 +75,16 @@ async def get_firm_adresses(
 
 @firms_mcp.tool
 async def get_firm_controlled_functions(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmControlledFunction]:
-    """Get firm controlled functions by FRN"""
+    """Retrieve the controlled functions held at a specific FCA-regulated firm.
+
+    Controlled functions are senior management or customer-facing roles that require FCA
+    approval (e.g., CF1 Director, CF10 Compliance Oversight, CF30 Customer Function). Use
+    this tool to see which regulated roles exist at a firm. If you do not have an FRN,
+    call search_frn first. To find which specific individuals hold these roles, use
+    get_firm_individuals instead.
+    """
     out = await fca_client.get_firm_controlled_functions(frn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmControlledFunction](
@@ -60,9 +95,16 @@ async def get_firm_controlled_functions(
 
 @firms_mcp.tool
 async def get_firm_individuals(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmIndividual]:
-    """Get firm individuals by FRN"""
+    """Retrieve all FCA-registered individuals associated with a specific firm.
+
+    Returns individuals and the controlled functions (regulated roles) they hold at the
+    firm, such as directors, compliance officers, and approved persons. Use this tool to
+    find out who holds regulated roles at a firm. If you do not have an FRN, call
+    search_frn first. For detailed information about a specific individual, use their IRN
+    with get_individual.
+    """
     out = await fca_client.get_firm_individuals(frn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmIndividual](
@@ -73,9 +115,15 @@ async def get_firm_individuals(
 
 @firms_mcp.tool
 async def get_firm_permissions(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmPermission]:
-    """Get firm permissions by FRN"""
+    """Retrieve the regulatory permissions granted to a specific FCA-regulated firm.
+
+    Permissions define what regulated activities a firm is authorized to carry out, such
+    as accepting deposits, arranging deals in investments, or insurance mediation. Use
+    this tool to verify what a firm is authorized to do under FCA regulation. If you do
+    not have an FRN, call search_frn first with the firm name.
+    """
     out = await fca_client.get_firm_permissions(frn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmPermission](
@@ -86,9 +134,16 @@ async def get_firm_permissions(
 
 @firms_mcp.tool
 async def get_firm_requirements(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmRequirement]:
-    """Get firm requirements by FRN"""
+    """Retrieve regulatory requirements imposed on a specific FCA-regulated firm.
+
+    Requirements are conditions or restrictions placed on a firm's authorization by the
+    FCA, such as capital requirements or reporting obligations. Use this tool to check
+    constraints on a firm's operations. If you do not have an FRN, call search_frn first.
+    To see which investment types a specific requirement applies to, use
+    get_firm_requirement_investment_types with the requirement reference from these results.
+    """
     out = await fca_client.get_firm_requirements(frn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmRequirement](
@@ -99,9 +154,21 @@ async def get_firm_requirements(
 
 @firms_mcp.tool
 async def get_firm_requirement_investment_types(
-    frn: str, req_ref: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam,
+    req_ref: Annotated[
+        str,
+        pydantic.Field(
+            description="The requirement reference identifier, obtained from get_firm_requirements results.",
+        ),
+    ],
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
 ) -> types.list_t.PaginatedList[types.firm.FirmRequirementInvestmentType]:
-    """Get investment types for a specific firm requirement"""
+    """Retrieve the investment types associated with a specific regulatory requirement for an FCA-regulated firm.
+
+    Use this tool after calling get_firm_requirements to drill into which investment types
+    a particular requirement applies to. Requires both a Firm Reference Number (FRN) and
+    a requirement reference (req_ref) obtained from get_firm_requirements results.
+    """
     out = await fca_client.get_firm_requirement_investment_types(frn, req_ref)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmRequirementInvestmentType](
@@ -112,9 +179,15 @@ async def get_firm_requirement_investment_types(
 
 @firms_mcp.tool
 async def get_firm_regulators(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmRegulator]:
-    """Get firm regulators by FRN"""
+    """Retrieve the regulators responsible for overseeing a specific firm.
+
+    Most FCA-regulated firms are overseen by the FCA alone, but some (e.g., banks,
+    insurers) are dual-regulated by both the FCA and the PRA (Prudential Regulation
+    Authority). Use this tool to determine which regulatory bodies have jurisdiction
+    over a firm. If you do not have an FRN, call search_frn first.
+    """
     out = await fca_client.get_firm_regulators(frn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmRegulator](
@@ -125,9 +198,16 @@ async def get_firm_regulators(
 
 @firms_mcp.tool
 async def get_firm_passports(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmPassport]:
-    """Get firm passports by FRN"""
+    """Retrieve the regulatory passports held by a specific FCA-regulated firm.
+
+    Passports (under pre-Brexit EEA arrangements) allow a firm authorized in one
+    jurisdiction to operate in other countries without separate authorization. Use this
+    tool to find which countries a firm has passported into. If you do not have an FRN,
+    call search_frn first. To see specific permissions in a passported country, use
+    get_firm_passport_permissions with the country from these results.
+    """
     out = await fca_client.get_firm_passports(frn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmPassport](
@@ -138,9 +218,23 @@ async def get_firm_passports(
 
 @firms_mcp.tool
 async def get_firm_passport_permissions(
-    frn: str, country: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam,
+    country: Annotated[
+        str,
+        pydantic.Field(
+            description=(
+                "The country name for which to retrieve passport permissions, obtained from get_firm_passports results."
+            ),
+        ),
+    ],
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
 ) -> types.list_t.PaginatedList[types.firm.FirmPassportPermission]:
-    """Get firm passport permissions by FRN and country"""
+    """Retrieve the specific permissions a firm holds under its regulatory passport in a given country.
+
+    Use this tool after calling get_firm_passports to drill into what a firm is authorized
+    to do in a specific passported jurisdiction. Requires both a Firm Reference Number
+    (FRN) and a country name obtained from get_firm_passports results.
+    """
     out = await fca_client.get_firm_passport_permissions(frn, country)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmPassportPermission](
@@ -151,9 +245,15 @@ async def get_firm_passport_permissions(
 
 @firms_mcp.tool
 async def get_firm_waivers(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmWaiver]:
-    """Get firm waivers by FRN"""
+    """Retrieve any regulatory waivers granted to a specific FCA-regulated firm.
+
+    Waivers are formal modifications to regulatory rules that the FCA has granted to a
+    firm, allowing it to deviate from standard requirements under specific conditions.
+    Use this tool to check if a firm has been granted any special regulatory concessions.
+    If you do not have an FRN, call search_frn first.
+    """
     out = await fca_client.get_firm_waivers(frn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmWaiver](
@@ -164,9 +264,15 @@ async def get_firm_waivers(
 
 @firms_mcp.tool
 async def get_firm_exclusions(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmExclusion]:
-    """"""
+    """Retrieve any exclusions that apply to a specific FCA-regulated firm.
+
+    Exclusions define specific regulated activities or products that a firm is explicitly
+    not authorized to carry out, narrowing the scope of its permissions. Use this tool to
+    understand limitations on a firm's authorization. If you do not have an FRN, call
+    search_frn first.
+    """
     out = await fca_client.get_firm_exclusions(frn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmExclusion](
@@ -177,9 +283,15 @@ async def get_firm_exclusions(
 
 @firms_mcp.tool
 async def get_firm_disciplinary_history(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmDisciplinaryRecord]:
-    """"""
+    """Retrieve the disciplinary history of a specific FCA-regulated firm.
+
+    Returns records of enforcement actions, fines, public censures, or other disciplinary
+    measures taken against the firm by the FCA. Use this tool when assessing a firm's
+    compliance track record or checking for past regulatory sanctions. If you do not have
+    an FRN, call search_frn first.
+    """
     out = await fca_client.get_firm_disciplinary_history(frn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmDisciplinaryRecord](
@@ -190,9 +302,15 @@ async def get_firm_disciplinary_history(
 
 @firms_mcp.tool
 async def get_firm_appointed_representatives(
-    frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
+    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmAppointedRepresentative]:
-    """Get firm appointed representatives by FRN"""
+    """Retrieve the appointed representatives (ARs) of a specific FCA-regulated firm.
+
+    Appointed representatives are firms or individuals authorized to carry out regulated
+    activities under the responsibility of a principal firm, rather than being directly
+    authorized by the FCA themselves. Use this tool to find which entities operate under
+    a firm's regulatory umbrella. If you do not have an FRN, call search_frn first.
+    """
     out = await fca_client.get_firm_appointed_representatives(frn)
     els = out.local_items()
     out = types.list_t.PaginatedList[types.firm.FirmAppointedRepresentative](
