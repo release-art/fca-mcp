@@ -6,6 +6,7 @@ from typing import Annotated
 import fastmcp
 import fca_api
 import pydantic
+from mcp.types import ToolAnnotations
 
 from . import deps, types
 
@@ -23,8 +24,15 @@ FrnParam = Annotated[
 
 firms_mcp = fastmcp.FastMCP("search-firms", on_duplicate="error")
 
+_TOOL_ANNOTATIONS = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=True,
+)
 
-@firms_mcp.tool
+
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm(frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep) -> types.firm.FirmDetails:
     """Retrieve detailed regulatory information about a specific FCA-regulated firm.
 
@@ -38,7 +46,7 @@ async def get_firm(frn: FrnParam, fca_client: fca_api.async_api.Client = deps.Fc
     return types.firm.FirmDetails.from_api_t(result)
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_names(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[fca_api.types.firm.FirmNameAlias]:
@@ -55,7 +63,7 @@ async def get_firm_names(
     )
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_adresses(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmAddress]:
@@ -73,7 +81,7 @@ async def get_firm_adresses(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_controlled_functions(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmControlledFunction]:
@@ -93,7 +101,7 @@ async def get_firm_controlled_functions(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_individuals(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmIndividual]:
@@ -113,7 +121,7 @@ async def get_firm_individuals(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_permissions(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmPermission]:
@@ -132,7 +140,7 @@ async def get_firm_permissions(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_requirements(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmRequirement]:
@@ -152,7 +160,7 @@ async def get_firm_requirements(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_requirement_investment_types(
     frn: FrnParam,
     req_ref: Annotated[
@@ -177,7 +185,7 @@ async def get_firm_requirement_investment_types(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_regulators(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmRegulator]:
@@ -196,7 +204,7 @@ async def get_firm_regulators(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_passports(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmPassport]:
@@ -216,7 +224,7 @@ async def get_firm_passports(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_passport_permissions(
     frn: FrnParam,
     country: Annotated[
@@ -243,7 +251,7 @@ async def get_firm_passport_permissions(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_waivers(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmWaiver]:
@@ -262,7 +270,7 @@ async def get_firm_waivers(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_exclusions(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmExclusion]:
@@ -281,7 +289,7 @@ async def get_firm_exclusions(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_disciplinary_history(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmDisciplinaryRecord]:
@@ -300,7 +308,7 @@ async def get_firm_disciplinary_history(
     return out
 
 
-@firms_mcp.tool
+@firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_appointed_representatives(
     frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.firm.FirmAppointedRepresentative]:

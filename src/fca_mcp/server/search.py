@@ -4,6 +4,7 @@ from typing import Annotated
 import fastmcp
 import fca_api
 import pydantic
+from mcp.types import ToolAnnotations
 
 from . import deps, types
 
@@ -12,8 +13,15 @@ logger = logging.getLogger(__name__)
 
 search_mcp = fastmcp.FastMCP("search-firms", on_duplicate="error")
 
+_TOOL_ANNOTATIONS = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=True,
+)
 
-@search_mcp.tool
+
+@search_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def search_frn(
     firm_name: Annotated[
         str,
@@ -44,7 +52,7 @@ async def search_frn(
     return out
 
 
-@search_mcp.tool
+@search_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def search_irn(
     individual_name: Annotated[
         str,
@@ -71,7 +79,7 @@ async def search_irn(
     return out
 
 
-@search_mcp.tool
+@search_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def search_prn(
     fund_name: Annotated[
         str,

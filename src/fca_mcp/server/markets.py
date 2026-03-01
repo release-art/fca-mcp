@@ -2,6 +2,7 @@ import logging
 
 import fastmcp
 import fca_api
+from mcp.types import ToolAnnotations
 
 from . import deps, types
 
@@ -9,8 +10,15 @@ logger = logging.getLogger(__name__)
 
 markets_mcp = fastmcp.FastMCP("search-markets", on_duplicate="error")
 
+_TOOL_ANNOTATIONS = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=True,
+)
 
-@markets_mcp.tool
+
+@markets_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_regulated_markets(
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
 ) -> types.list_t.PaginatedList[types.markets.RegulatedMarket]:

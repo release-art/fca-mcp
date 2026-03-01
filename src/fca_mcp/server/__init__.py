@@ -7,13 +7,13 @@ import logging
 import os
 import weakref
 
-from mcp.types import Icon
 import fastmcp
 import fca_api
 from fastmcp.server.lifespan import lifespan
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
+from mcp.types import Icon
 
 import fca_mcp
 
@@ -40,8 +40,9 @@ def get_server() -> fastmcp.FastMCP:
         website_url="https://www.release.art/",
         icons=[
             Icon(
-                url="https://static.release.art/assets/icons/brandmark_blue.svg",
+                src="https://static.release.art/assets/icons/brandmark_blue.svg",
                 type="image/svg",
+                sizes=["any"],
             )
         ],
         on_duplicate="error",

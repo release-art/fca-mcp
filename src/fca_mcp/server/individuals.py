@@ -4,6 +4,7 @@ from typing import Annotated
 import fastmcp
 import fca_api
 import pydantic
+from mcp.types import ToolAnnotations
 
 from . import deps, types
 
@@ -21,8 +22,15 @@ IrnParam = Annotated[
 
 individuals_mcp = fastmcp.FastMCP("search-individuals", on_duplicate="error")
 
+_TOOL_ANNOTATIONS = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=True,
+)
 
-@individuals_mcp.tool
+
+@individuals_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_individual(
     irn: IrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.individual.Individual:
@@ -38,7 +46,7 @@ async def get_individual(
     return types.individual.Individual.from_api_t(out)
 
 
-@individuals_mcp.tool
+@individuals_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_individual_controlled_functions(
     irn: IrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.individual.IndividualControlledFunction]:
@@ -59,7 +67,7 @@ async def get_individual_controlled_functions(
     return out
 
 
-@individuals_mcp.tool
+@individuals_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_individual_disciplinary_history(
     irn: IrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.individual.IndividualDisciplinaryRecord]:

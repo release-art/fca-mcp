@@ -4,11 +4,19 @@ from typing import Annotated
 import fastmcp
 import fca_api
 import pydantic
+from mcp.types import ToolAnnotations
 
 from . import deps, types
 
 logger = logging.getLogger(__name__)
 funds_mcp = fastmcp.FastMCP("search-funds", on_duplicate="error")
+
+_TOOL_ANNOTATIONS = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=True,
+)
 
 PrnParam = Annotated[
     str,
@@ -21,7 +29,7 @@ PrnParam = Annotated[
 ]
 
 
-@funds_mcp.tool
+@funds_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_fund(
     prn: PrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.products.ProductDetails:
@@ -37,7 +45,7 @@ async def get_fund(
     return types.products.ProductDetails.from_api_t(out)
 
 
-@funds_mcp.tool
+@funds_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_fund_names(
     prn: PrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.products.ProductNameAlias]:
@@ -55,7 +63,7 @@ async def get_fund_names(
     return out
 
 
-@funds_mcp.tool
+@funds_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_fund_subfunds(
     prn: PrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
 ) -> types.list_t.PaginatedList[types.products.SubFundDetails]:
