@@ -31,3 +31,14 @@ async def test_get_firm_names(mcp_client: Client[FastMCPTransport]):
         },
     )
     assert tool_result is not None
+
+
+@pytest.mark.asyncio
+async def test_get_firm_addresses(mcp_client: Client[FastMCPTransport]):
+    tool_result = await mcp_client.call_tool(
+        name="get_firm_adresses",
+        arguments={
+            "frn": "759676",
+        },
+    )
+    assert tool_result is not None
