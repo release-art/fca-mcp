@@ -18,7 +18,7 @@ import fca_mcp
 
 logger = logging.getLogger(__name__)
 
-from . import deps, firms, funds, individuals, search, types
+from . import deps, firms, funds, individuals, search, markets, types
 
 
 @lifespan
@@ -44,7 +44,7 @@ def get_server() -> fastmcp.FastMCP:
     main.mount(firms.get_server())
     main.mount(funds.get_server())
     main.mount(individuals.get_server())
-
+    main.mount(markets.get_server())
     main.add_middleware(ErrorHandlingMiddleware())
     main.add_middleware(RateLimitingMiddleware())
     main.add_middleware(LoggingMiddleware())
