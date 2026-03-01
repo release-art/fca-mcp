@@ -7,6 +7,7 @@ import logging
 import os
 import weakref
 
+from mcp.types import Icon
 import fastmcp
 import fca_api
 from fastmcp.server.lifespan import lifespan
@@ -37,6 +38,12 @@ def get_server() -> fastmcp.FastMCP:
         "fca-api",
         lifespan=mcp_lifespan,
         website_url="https://www.release.art/",
+        icons=[
+            Icon(
+                url="https://static.release.art/assets/icons/brandmark_blue.svg",
+                type="image/svg",
+            )
+        ],
         on_duplicate="error",
         strict_input_validation=True,
     )
