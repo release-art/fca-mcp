@@ -14,31 +14,39 @@ individuals_mcp = fastmcp.FastMCP("search-individuals", on_duplicate="error")
 @individuals_mcp.tool
 async def get_individual(
     irn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> fca_api.types.individual.Individual:
+) -> types.individual.Individual:
     """Get individual details by IRN"""
     out = await fca_client.get_individual(irn)
-    return out
+    return types.individual.Individual.from_api_t(out)
 
 
 @individuals_mcp.tool
 async def get_individual_controlled_functions(
     irn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> fca_api.types.pagination.MultipageList[fca_api.types.individual.IndividualControlledFunction]:
+) -> types.list_t.PaginatedList[types.individual.IndividualControlledFunction]:
     """Get controlled functions for an individual"""
     out = await fca_client.get_individual_controlled_functions(irn)
     els = out.local_items()
-    out = types.list_t.PaginatedList[fca_api.types.individual.IndividualControlledFunction](items=els)
+    out = types.list_t.PaginatedList[types.individual.IndividualControlledFunction](
+        items=[types.individual.IndividualControlledFunction.from_api_t(el) for el in els],
+        start_index=0,
+        has_next=False,
+    )
     return out
 
 
 @individuals_mcp.tool
 async def get_individual_disciplinary_history(
     irn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> fca_api.types.pagination.MultipageList[fca_api.types.individual.IndividualDisciplinaryRecord]:
+) -> types.list_t.PaginatedList[types.individual.IndividualDisciplinaryRecord]:
     """Get disciplinary history records for an individual"""
     out = await fca_client.get_individual_disciplinary_history(irn)
     els = out.local_items()
-    out = types.list_t.PaginatedList[fca_api.types.individual.IndividualDisciplinaryRecord](items=els)
+    out = types.list_t.PaginatedList[types.individual.IndividualDisciplinaryRecord](
+        items=[types.individual.IndividualDisciplinaryRecord.from_api_t(el) for el in els],
+        start_index=0,
+        has_next=False,
+    )
     return out
 
 
