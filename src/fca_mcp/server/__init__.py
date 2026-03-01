@@ -18,7 +18,7 @@ import fca_mcp
 
 logger = logging.getLogger(__name__)
 
-from . import deps, firms, funds, individuals, search, markets, types
+from . import deps, firms, funds, individuals, markets, search, types
 
 
 @lifespan

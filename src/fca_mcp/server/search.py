@@ -27,7 +27,7 @@ async def search_frn(
         ),
     ],
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> types.list_t.PaginatedList[fca_api.types.search.FirmSearchResult]:
+) -> types.list_t.PaginatedList[types.search.FirmSearchResult]:
     """Search the UK FCA Financial Services Register for regulated firms by name or partial name match.
 
     Use this tool when the user asks about a financial firm, wants to verify if a company is
@@ -38,7 +38,7 @@ async def search_frn(
     """
     out = await fca_client.search_frn(firm_name)
     els = out.local_items()
-    out = types.list_t.PaginatedList[fca_api.types.search.FirmSearchResult](
+    out = types.list_t.PaginatedList[types.search.FirmSearchResult](
         items=[types.search.FirmSearchResult.from_api_t(el) for el in els], start_index=0, has_next=False
     )
     return out
@@ -54,7 +54,7 @@ async def search_irn(
         ),
     ],
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> fca_api.types.pagination.MultipageList[fca_api.types.search.IndividualSearchResult]:
+) -> types.list_t.PaginatedList[types.search.IndividualSearchResult]:
     """Search the UK FCA Financial Services Register for registered individuals by name.
 
     Use this tool when the user asks about a specific person in financial services, wants to
@@ -65,7 +65,9 @@ async def search_irn(
     """
     out = await fca_client.search_irn(individual_name)
     els = out.local_items()
-    out = types.list_t.PaginatedList[fca_api.types.search.IndividualSearchResult](items=els)
+    out = types.list_t.PaginatedList[types.search.IndividualSearchResult](
+        items=[types.search.IndividualSearchResult.from_api_t(el) for el in els], start_index=0, has_next=False
+    )
     return out
 
 
@@ -79,7 +81,7 @@ async def search_prn(
         ),
     ],
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> fca_api.types.pagination.MultipageList[fca_api.types.search.FundSearchResult]:
+) -> types.list_t.PaginatedList[types.search.FundSearchResult]:
     """Search the UK FCA Financial Services Register for investment funds by name or partial name match.
 
     Use this tool when the user asks about a specific investment fund, wants to verify if a
@@ -90,7 +92,9 @@ async def search_prn(
     """
     out = await fca_client.search_prn(fund_name)
     els = out.local_items()
-    out = types.list_t.PaginatedList[fca_api.types.search.FundSearchResult](items=els)
+    out = types.list_t.PaginatedList[types.search.FundSearchResult](
+        items=[types.search.FundSearchResult.from_api_t(el) for el in els], start_index=0, has_next=False
+    )
     return out
 
 

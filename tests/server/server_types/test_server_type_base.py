@@ -33,6 +33,23 @@ class TestReflect:
         assert "b" in ModelB.model_fields
         assert "c" not in ModelB.model_fields
 
+    def test_exclude_nullable_with_pydantic_field(self):
+        class ModelA(pydantic.BaseModel):
+            a: int
+            b: str
+            c: typing.Annotated[
+                pydantic.HttpUrl | None,
+                pydantic.Field(
+                    description="The URL of the firm's record in the FCA register.",
+                ),
+                fca_api_types.annotations.FcaApiFieldInfo(marks=[fca_api_types.annotations.FcaApiField.InternalUrl]),
+            ]
+
+        ModelB = server_type_base.reflect_fca_api_t(ModelA)
+        assert "a" in ModelB.model_fields
+        assert "b" in ModelB.model_fields
+        assert "c" not in ModelB.model_fields
+
     def test_exclude_without_pydantic_field(self):
         class ModelA(pydantic.BaseModel):
             a: int
