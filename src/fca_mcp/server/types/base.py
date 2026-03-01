@@ -48,7 +48,7 @@ def reflect_fca_api_t(
         else:
             fields[name] = (field_t, field.default)
     return pydantic.create_model(
-        model_cls.__name__,
+        f"{model_cls.__name__}Reflected",
         **fields,
         __base__=ReflectedFcaApiModelT[ModelT],
     )

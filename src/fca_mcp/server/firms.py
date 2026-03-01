@@ -23,12 +23,11 @@ async def get_firm(frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiD
 @firms_mcp.tool
 async def get_firm_names(
     frn: str, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> fca_api.types.pagination.MultipageList[fca_api.types.firm.FirmNameAlias]:
+) -> types.list_t.PaginatedList[fca_api.types.firm.FirmNameAlias]:
     """Get firm names by FRN"""
     out = await fca_client.get_firm_names(frn)
     els = out.local_items()
-    out = types.list_t.PaginatedList[fca_api.types.firm.FirmNameAlias](items=els)
-    return out
+    return types.list_t.PaginatedList[fca_api.types.firm.FirmNameAlias](items=els, start_index=0, has_next=False)
 
 
 @firms_mcp.tool

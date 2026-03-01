@@ -16,7 +16,7 @@ class TestReflect:
             b: str
 
         ModelB = server_type_base.reflect_fca_api_t(ModelA)
-        assert ModelA.model_json_schema() == ModelB.model_json_schema()
+        assert ModelA.model_json_schema() == (ModelB.model_json_schema() | {"title": "ModelA"})
 
     def test_exclude_with_pydantic_field(self):
         class ModelA(pydantic.BaseModel):
