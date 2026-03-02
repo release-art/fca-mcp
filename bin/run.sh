@@ -13,6 +13,9 @@ esac
 export FCA_API_USERNAME="${FCA_API_USERNAME:-op://Employee/d5fon4y2ftqt6cb3bww4bizoza/username}"
 export FCA_API_KEY="${FCA_API_KEY:-op://Employee/d5fon4y2ftqt6cb3bww4bizoza/api key}"
 
+export AUTH0_DOMAIN="dev-ih75psmq3vgek4te.uk.auth0.com"
+export AUTH0_AUDIENCE="dev-ih75psmq3vgek4te.uk.auth0.com"
+
 if [ -n "$*" ]; then
     ARGS=("$@")
 else

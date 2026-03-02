@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import contextlib
 import logging
-import os
-import weakref
 
 import fastmcp
 import fca_api
@@ -19,14 +16,15 @@ import fca_mcp
 
 logger = logging.getLogger(__name__)
 
-from . import deps, firms, funds, individuals, markets, search, types
+from . import deps, firms, funds, individuals, markets, search, types, auth
 
 
 @lifespan
 async def mcp_lifespan(app: fastmcp.FastMCP):
-    fca_email = os.environ["FCA_API_USERNAME"]
-    fca_key = os.environ["FCA_API_KEY"]
-    client = fca_api.async_api.Client((fca_email, fca_key))
+    settings = fca_mcp.settings.get_settings()
+    client = fca_api.async_api.Client(
+        (settings.fca_api.username, settings.fca_api.key)
+    )
     logger.info(f"Server {app} initialized successfully")
     async with client:
         yield {"fca_app": fca_mcp.app.FcaApp(fca_api=client)}
@@ -47,6 +45,7 @@ def get_server() -> fastmcp.FastMCP:
         ],
         on_duplicate="error",
         strict_input_validation=True,
+        auth=auth.get_auth_provider(),
     )
     main.mount(search.get_server())
     main.mount(firms.get_server())

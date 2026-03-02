@@ -15,6 +15,7 @@ from . import (
     logging as fca_logging,
     server,
     uvcorn_app,
+    settings,
 )
 
 logger = std_logging.getLogger(__name__)
