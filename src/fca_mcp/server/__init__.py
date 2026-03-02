@@ -13,12 +13,13 @@ from fastmcp.server.lifespan import lifespan
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
+from mcp.types import Icon
 
 import fca_mcp
 
 logger = logging.getLogger(__name__)
 
-from . import deps, firms, types
+from . import deps, firms, funds, individuals, markets, search, types
 
 
 @lifespan
@@ -28,7 +29,7 @@ async def mcp_lifespan(app: fastmcp.FastMCP):
     client = fca_api.async_api.Client((fca_email, fca_key))
     logger.info(f"Server {app} initialized successfully")
     async with client:
-        yield {"fca_app": fca_mcp.types.FcaApp(fca_api=client)}
+        yield {"fca_app": fca_mcp.app.FcaApp(fca_api=client)}
     logger.info("Server shutdown complete")
 
 
@@ -37,11 +38,21 @@ def get_server() -> fastmcp.FastMCP:
         "fca-api",
         lifespan=mcp_lifespan,
         website_url="https://www.release.art/",
+        icons=[
+            Icon(
+                src="https://static.release.art/assets/icons/brandmark_blue.svg",
+                type="image/svg",
+                sizes=["any"],
+            )
+        ],
         on_duplicate="error",
         strict_input_validation=True,
     )
+    main.mount(search.get_server())
     main.mount(firms.get_server())
-
+    main.mount(funds.get_server())
+    main.mount(individuals.get_server())
+    main.mount(markets.get_server())
     main.add_middleware(ErrorHandlingMiddleware())
     main.add_middleware(RateLimitingMiddleware())
     main.add_middleware(LoggingMiddleware())
