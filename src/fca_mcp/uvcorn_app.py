@@ -12,14 +12,7 @@ import fca_mcp
 
 logger = logging.getLogger(__name__)
 
-healthchecks = fastapi.APIRouter(prefix="/_container", tags=["Health"])
-
-
-@asynccontextmanager
-async def http_lifespan(app: fastapi.FastAPI):
-    logger.debug("Starting up the HTTP app...")
-    yield {}
-    logger.debug("Shutting down the HTTP app...")
+healthchecks = fastapi.APIRouter(prefix="/.container", tags=["Health"])
 
 
 @healthchecks.get("/health")
@@ -32,6 +25,22 @@ async def health():
         "timestamp": datetime.now().isoformat(),
         "features": {"mcp_tools": True, "ai_analysis": True, "nl_interface": True},
     }
+
+
+well_known_router = fastapi.APIRouter(prefix="/.well-known", tags=["Well-Known"])
+
+
+@well_known_router.get("/oauth-authorization-server")
+async def openid_configuration(app: fca_mcp.app.FcaMcpAppT):
+    """Forward OpenID configuration requests to the FastMCP HTTP app."""
+    return 42
+
+
+@asynccontextmanager
+async def http_lifespan(app: fastapi.FastAPI):
+    logger.debug("Starting up the HTTP app...")
+    yield
+    logger.debug("Shutting down the HTTP app...")
 
 
 def get_fastapi_app() -> fastapi.FastAPI:
@@ -47,7 +56,14 @@ def get_fastapi_app() -> fastapi.FastAPI:
             mcp_app.lifespan,
         ),
     )
+    app.my_app_ctx = fca_mcp.app.FcaMcpApp(
+        fastmcp_server=mcp,
+        fastmcp_http_app=mcp_app,
+    )
     app.include_router(healthchecks)
+    if mcp.auth is not None:
+        print("Auth provider is set, including auth routes")
+        # app.include_router(well_known_router)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],

@@ -4,16 +4,18 @@ import dataclasses
 import typing
 
 import fastapi
-import fca_api
+import fastmcp.server
+import fastmcp.server.http
 
 
 @dataclasses.dataclass(slots=True)
-class FcaApp:
-    fca_api: fca_api.async_api.Client
+class FcaMcpApp:
+    fastmcp_server: fastmcp.server.FastMCP
+    fastmcp_http_app: fastmcp.server.http.StarletteWithLifespan
 
 
-async def get_fca_app(request: fastapi.Request) -> FcaApp:
+async def get_fca_mcp_app(request: fastapi.Request) -> FcaMcpApp:
     return request.app.my_app_ctx
 
 
-FcaAppT = typing.Annotated[FcaApp, fastapi.Depends(get_fca_app)]
+FcaMcpAppT = typing.Annotated[FcaMcpApp, fastapi.Depends(get_fca_mcp_app)]

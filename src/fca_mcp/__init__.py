@@ -14,8 +14,8 @@ from . import (
     cli,
     logging as fca_logging,
     server,
-    uvcorn_app,
     settings,
+    uvcorn_app,
 )
 
 logger = std_logging.getLogger(__name__)

@@ -5,7 +5,7 @@ from __future__ import annotations
 import functools
 from typing import Literal
 
-from pydantic import Field, HttpUrl, RedisDsn, field_validator
+from pydantic import Field, HttpUrl, RedisDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,12 +27,10 @@ class Auth0Settings(BaseSettings):
         ...,
         description="Auth0 API audience identifier",
     )
-    client_id: str | None = Field(
-        default=None,
+    client_id: str = Field(
         description="Auth0 client ID (optional, for client credentials flow)",
     )
-    client_secret: str | None = Field(
-        default=None,
+    client_secret: str = Field(
         description="Auth0 client secret (optional, for client credentials flow)",
     )
 
@@ -141,32 +139,14 @@ class ServerSettings(BaseSettings):
         le=65535,
         description="Server port number",
     )
-    hostname: str = Field(
-        default="localhost",
-        description="Public hostname for URL/path generation",
-    )
-    base_url: HttpUrl | None = Field(
-        default=None,
-        description="Full base URL (auto-generated if not provided)",
-    )
-    reload: bool = Field(
-        default=False,
-        description="Enable auto-reload in development",
+    base_url: HttpUrl = Field(
+        description="Full base URL",
     )
     workers: int = Field(
         default=1,
         ge=1,
         description="Number of worker processes",
     )
-
-    @field_validator("base_url", mode="before")
-    @classmethod
-    def generate_base_url(cls, v: str | None, info) -> str | None:
-        """Auto-generate base_url if not provided."""
-        if v is not None:
-            return v
-        # Will be generated when settings are accessed
-        return None
 
 
 class LoggingSettings(BaseSettings):
@@ -212,7 +192,7 @@ class Settings(BaseSettings):
         default=False,
         description="Enable debug mode",
     )
-    
+
     # Nested settings
     auth0: Auth0Settings = Field(default_factory=Auth0Settings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
@@ -232,22 +212,17 @@ class Settings(BaseSettings):
 
     def get_base_url(self) -> str:
         """Get the full base URL for the application."""
-        if self.server.base_url:
-            return str(self.server.base_url)
-        
-        protocol = "https" if self.environment == "production" else "http"
-        port_str = f":{self.server.port}" if self.server.port not in (80, 443) else ""
-        return f"{protocol}://{self.server.hostname}{port_str}"
+        return str(self.server.base_url)
 
 
 @functools.lru_cache
 def get_settings() -> Settings:
     """
     Get cached global settings instance.
-    
+
     This function is cached to ensure a single Settings instance
     is used throughout the application lifecycle.
-    
+
     Returns:
         Settings: The global settings instance
     """

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from fastmcp.server.auth.providers.auth0 import Auth0Provider
 from fastmcp.server.auth import AuthProvider
+from fastmcp.server.auth.providers.auth0 import Auth0Provider
 
 import fca_mcp.settings
 

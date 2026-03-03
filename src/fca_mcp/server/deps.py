@@ -8,12 +8,12 @@ import fastmcp
 import fca_api
 from fastmcp.dependencies import CurrentContext, Depends
 
-import fca_mcp
+from . import app
 
 logger = logging.getLogger(__name__)
 
 
-def get_fca_app(ctx: fastmcp.Context = CurrentContext()) -> fca_mcp.types.FcaApp:
+def get_fca_app(ctx: fastmcp.Context = CurrentContext()) -> app.FcaApp:
     return ctx.lifespan_context["fca_app"]
 
 

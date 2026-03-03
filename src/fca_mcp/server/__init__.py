@@ -16,18 +16,16 @@ import fca_mcp
 
 logger = logging.getLogger(__name__)
 
-from . import deps, firms, funds, individuals, markets, search, types, auth
+from . import app, auth, deps, firms, funds, individuals, markets, search, types
 
 
 @lifespan
-async def mcp_lifespan(app: fastmcp.FastMCP):
+async def mcp_lifespan(mcp_app: fastmcp.FastMCP):
     settings = fca_mcp.settings.get_settings()
-    client = fca_api.async_api.Client(
-        (settings.fca_api.username, settings.fca_api.key)
-    )
-    logger.info(f"Server {app} initialized successfully")
+    client = fca_api.async_api.Client((settings.fca_api.username, settings.fca_api.key))
+    logger.info(f"Server {mcp_app} initialized successfully")
     async with client:
-        yield {"fca_app": fca_mcp.app.FcaApp(fca_api=client)}
+        yield {"fca_app": app.FcaApp(fca_api=client)}
     logger.info("Server shutdown complete")
 
 

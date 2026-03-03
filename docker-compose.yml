@@ -1,5 +1,5 @@
 services:
-  mcp-server:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
@@ -28,46 +28,3 @@ services:
     stdin_open: false
     tty: false
 
-  mcp-server-interactive:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fca-mcp-server-interactive
-    ports:
-      - "8001:8000"
-    environment:
-      - FCA_API_EMAIL=${FCA_API_EMAIL}
-      - FCA_API_KEY=${FCA_API_KEY}
-      - PYTHONUNBUFFERED=1
-    env_file:
-      - .env
-    volumes:
-      - ./mcp_fca:/app/mcp_fca
-      - ./src:/app/src
-      - ./fca_mcp_server.py:/app/fca_mcp_server.py
-      - ./.env:/app/.env:ro
-    restart: unless-stopped
-    command: pdm run python fca_mcp_server.py
-    stdin_open: true
-    tty: true
-    profiles:
-      - interactive
-
-  test-runner:
-    build:
-      context: .
-      dockerfile: Dockerfile.test
-    container_name: fca-mcp-test
-    environment:
-      - FCA_API_EMAIL=${FCA_API_EMAIL}
-      - FCA_API_KEY=${FCA_API_KEY}
-      - PYTHONUNBUFFERED=1
-    env_file:
-      - .env
-    volumes:
-      - ./mcp_fca:/app/mcp_fca
-      - ./src:/app/src
-      - ./tests:/app/tests
-    command: pdm run pytest mcp_fca/tests/ -v
-    profiles:
-      - test
