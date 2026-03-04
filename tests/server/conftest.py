@@ -4,8 +4,10 @@ import fca_api
 import pytest
 import pytest_asyncio
 from fastmcp.client import Client
+from fastmcp.server.auth import AccessToken
 
 import fca_mcp
+from fca_mcp.server.auth import scopes as auth_scopes
 
 
 @pytest.fixture
@@ -31,7 +33,71 @@ def mock_fca_api(mocker, original_client_cls, caching_mock_api):
 
 
 @pytest.fixture
-def mcp_app():
+def oauth_scopes() -> list[str]:
+    """OAuth scopes granted to the test client.
+
+    Override this fixture in individual tests or test modules to test scope
+    restrictions. The default grants full read access so existing tests pass
+    unchanged.
+
+    Example — deny access by removing all scopes::
+
+        @pytest.fixture
+        def oauth_scopes():
+            return []
+
+    Example — grant a custom scope::
+
+        @pytest.fixture
+        def oauth_scopes():
+            return ["custom:scope"]
+    """
+    return [auth_scopes.FCA_API_RO]
+
+
+@pytest.fixture(autouse=True)
+def mock_auth_components(mocker, oauth_scopes):
+    """Mock authentication components for in-memory transport testing.
+
+    Patches two things so that the MCP AuthMiddleware works without real
+    Auth0 / Azure infrastructure:
+
+    1. ``get_auth_provider()`` → returns a ``DebugTokenVerifier`` so
+       ``get_server()`` can be called without Azure credentials.
+    2. ``get_access_token()`` → returns a synthetic ``AccessToken`` whose
+       scopes match the ``oauth_scopes`` fixture, allowing the
+       ``AuthMiddleware`` to evaluate ``restrict_tag`` checks.
+    """
+    from fastmcp.server.auth.providers.debug import DebugTokenVerifier
+
+    # Replace the auth provider so get_server() doesn't need Azure / Auth0.
+    mock_provider = DebugTokenVerifier(scopes=oauth_scopes)
+    mocker.patch(
+        "fca_mcp.server.auth.provider.get_auth_provider",
+        return_value=mock_provider,
+    )
+
+    # Provide a synthetic token with the requested scopes.
+    # AuthMiddleware calls get_access_token() (imported at module level in
+    # fastmcp.server.middleware.authorization) so we patch it there.
+    mock_token = AccessToken(
+        token="test-token",
+        client_id="test-client",
+        scopes=oauth_scopes,
+        expires_at=None,
+        claims={},
+    )
+    mocker.patch(
+        "fastmcp.server.middleware.authorization.get_access_token",
+        return_value=mock_token,
+    )
+
+    return mock_token
+
+
+@pytest.fixture
+def mcp_app(mock_auth_components):
+    """Create test MCP server with mocked authentication."""
     return fca_mcp.server.get_server()
 
 

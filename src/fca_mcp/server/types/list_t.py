@@ -8,7 +8,7 @@ ModelT = typing.TypeVar("ModelT", bound=pydantic.BaseModel)
 
 
 class PaginatedList(pydantic.BaseModel, typing.Generic[ModelT]):
-    items: typing.List[ModelT]
+    items: typing.Annotated[typing.List[ModelT], pydantic.Field()]
     has_next: typing.Annotated[
         bool,
         pydantic.Field(
@@ -19,6 +19,8 @@ class PaginatedList(pydantic.BaseModel, typing.Generic[ModelT]):
     start_index: typing.Annotated[
         int,
         pydantic.Field(
-            description="The index of the first item in `items` within the full list of items that could be returned by the API",
+            description=(
+                "The index of the first item in `items` within the full list of items that could be returned by the API"
+            ),
         ),
     ]

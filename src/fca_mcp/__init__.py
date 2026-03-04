@@ -11,9 +11,11 @@ import logging as std_logging
 from . import (
     __version__,
     app,
+    azure,
     cli,
     logging as fca_logging,
     server,
+    settings,
     uvcorn_app,
 )
 

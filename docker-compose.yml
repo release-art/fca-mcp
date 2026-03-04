@@ -1,73 +1,39 @@
 services:
-  mcp-server:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fca-mcp-server
+      target: interactive-work
     ports:
       - "8000:8000"
+    depends_on:
+      - azurite
     environment:
-      - FCA_API_EMAIL=${FCA_API_EMAIL}
-      - FCA_API_KEY=${FCA_API_KEY}
+      - FCA_API_USERNAME
+      - FCA_API_KEY
+      - AUTH0_DOMAIN
+      - AUTH0_CLIENT_ID
+      - AUTH0_CLIENT_SECRET
+      - AUTH0_AUDIENCE
+      - AUTH0_JWT_SIGNING_KEY
+      - AUTH0_STORAGE_ENCRYPTION_KEY
+      - SERVER_BASE_URL
+      - AZURE_STORAGE_CONNECTION_STRING
+      - AZURE_CREDENTIAL
       - PYTHONUNBUFFERED=1
-    env_file:
-      - .env
     volumes:
-      - ./mcp_fca:/app/mcp_fca
       - ./src:/app/src
-      - ./fca_mcp_server.py:/app/fca_mcp_server.py
-      - ./.env:/app/.env:ro
-    restart: unless-stopped
-    command: pdm run python fca_mcp_server.py --http-mode --host 0.0.0.0 --port 8000
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    stdin_open: false
-    tty: false
+    command: pdm run python -m fca_mcp serve --reload
 
-  mcp-server-interactive:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fca-mcp-server-interactive
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
     ports:
-      - "8001:8000"
-    environment:
-      - FCA_API_EMAIL=${FCA_API_EMAIL}
-      - FCA_API_KEY=${FCA_API_KEY}
-      - PYTHONUNBUFFERED=1
-    env_file:
-      - .env
+      - "10000:10000"  # Blob
+      - "10001:10001"  # Queue
+      - "10002:10002"  # Table
     volumes:
-      - ./mcp_fca:/app/mcp_fca
-      - ./src:/app/src
-      - ./fca_mcp_server.py:/app/fca_mcp_server.py
-      - ./.env:/app/.env:ro
-    restart: unless-stopped
-    command: pdm run python fca_mcp_server.py
-    stdin_open: true
-    tty: true
-    profiles:
-      - interactive
+      - azurite_data:/data
+    command: azurite --skipApiVersionCheck --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0
 
-  test-runner:
-    build:
-      context: .
-      dockerfile: Dockerfile.test
-    container_name: fca-mcp-test
-    environment:
-      - FCA_API_EMAIL=${FCA_API_EMAIL}
-      - FCA_API_KEY=${FCA_API_KEY}
-      - PYTHONUNBUFFERED=1
-    env_file:
-      - .env
-    volumes:
-      - ./mcp_fca:/app/mcp_fca
-      - ./src:/app/src
-      - ./tests:/app/tests
-    command: pdm run pytest mcp_fca/tests/ -v
-    profiles:
-      - test
+volumes:
+  azurite_data:

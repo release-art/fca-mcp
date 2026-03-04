@@ -10,9 +10,9 @@ class ReflectedFcaApiModelT(pydantic.BaseModel, typing.Generic[ModelT]):
     """Base class for reflected FCA API models with conversion support."""
 
     @classmethod
-    def from_api_t(cls, input: ModelT) -> "ReflectedFcaApiModelT[ModelT]":
+    def from_api_t(cls, data: ModelT) -> "ReflectedFcaApiModelT[ModelT]":
         """Convert the reflected model back to the original model type."""
-        return cls.model_validate(input.model_dump(mode="python"))
+        return cls.model_validate(data.model_dump(mode="python"))
 
 
 def reflect_fca_api_t(
