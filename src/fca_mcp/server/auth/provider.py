@@ -10,7 +10,6 @@ from key_value.aio.wrappers.encryption import FernetEncryptionWrapper
 import fca_mcp
 import fca_mcp.settings
 
-
 from . import scopes
 
 
