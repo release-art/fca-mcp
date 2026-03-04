@@ -59,6 +59,7 @@ def get_fastapi_app() -> fastapi.FastAPI:
                 expose_headers=["mcp-session-id"],
             )
         ],
+        stateless_http=True, 
     )
     app = fastapi.FastAPI(
         title="FCA MCP Server API",

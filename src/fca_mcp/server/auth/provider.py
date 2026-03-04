@@ -11,6 +11,9 @@ import fca_mcp
 import fca_mcp.settings
 
 
+from . import scopes
+
+
 def get_auth_provider() -> AuthProvider:
     """Get the Auth0 authentication provider."""
     settings = fca_mcp.settings.get_settings()
@@ -23,6 +26,7 @@ def get_auth_provider() -> AuthProvider:
         jwt_signing_key=settings.auth0.jwt_signing_key,
         base_url=settings.get_base_url(),
         config_url=f"https://{settings.auth0.domain}/.well-known/openid-configuration",
+        required_scopes=[scopes.FCA_API_RO],
         client_storage=FernetEncryptionWrapper(
             key_value=fca_mcp.azure.blob_key_value.AzureBlobStore(
                 client=tmp_api.blob_service_client,

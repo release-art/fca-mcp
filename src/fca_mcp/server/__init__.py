@@ -11,6 +11,8 @@ from fastmcp.server.lifespan import lifespan
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
+from fastmcp.server.middleware import AuthMiddleware
+from fastmcp.server.auth import restrict_tag
 from mcp.types import Icon
 
 import fca_mcp
@@ -44,7 +46,10 @@ def get_server() -> fastmcp.FastMCP:
         ],
         on_duplicate="error",
         strict_input_validation=True,
-        auth=auth.get_auth_provider(),
+        auth=auth.provider.get_auth_provider(),
+        middleware=[
+            AuthMiddleware(auth=restrict_tag(auth.tags.FCA_API_RO, scopes=[auth.scopes.FCA_API_RO])),
+        ]
     )
     main.mount(search.get_server())
     main.mount(firms.get_server())

@@ -6,7 +6,7 @@ import fca_api
 import pydantic
 from mcp.types import ToolAnnotations
 
-from . import deps, types
+from . import deps, types, auth
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,9 @@ _TOOL_ANNOTATIONS = ToolAnnotations(
 )
 
 
-@search_mcp.tool(annotations=_TOOL_ANNOTATIONS)
+@search_mcp.tool(annotations=_TOOL_ANNOTATIONS, tags={
+    auth.tags.FCA_API_RO,
+})
 async def search_frn(
     firm_name: Annotated[
         str,
