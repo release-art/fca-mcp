@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, overload
+from typing import Any
 
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.storage.blob.aio import BlobServiceClient, ContainerClient
@@ -71,28 +71,30 @@ class AzureBlobStore(BaseContextManagerStore, BaseEnumerateKeysStore, BaseStore)
     """
 
     _container_name: str
-    _client: ContainerClient
-    _blob_service_client: BlobServiceClient | None
+    _client: ContainerClient | None
+    _blob_service_client: BlobServiceClient
 
     def __init__(
         self,
         *,
-        client: ContainerClient,
+        client: BlobServiceClient,
         container_name: str,
         default_collection: str | None = None,
         collection_sanitization_strategy: SanitizationStrategy | None = None,
         key_sanitization_strategy: SanitizationStrategy | None = None,
     ) -> None:
         self._container_name = container_name
-        self._blob_service_client = None
-        self._client = client
-        client_provided = client is not None
+        assert isinstance(client, BlobServiceClient), (
+            f"client must be an instance of BlobServiceClient, got {type(client)}"
+        )
+        self._blob_service_client = client
+        self._client = self._blob_service_client.get_container_client(container_name)
 
         super().__init__(
             default_collection=default_collection,
             collection_sanitization_strategy=collection_sanitization_strategy,
             key_sanitization_strategy=key_sanitization_strategy,
-            client_provided_by_user=client_provided,
+            client_provided_by_user=True,
         )
 
     @property
@@ -105,10 +107,12 @@ class AzureBlobStore(BaseContextManagerStore, BaseEnumerateKeysStore, BaseStore)
     @override
     async def _setup(self) -> None:
         if not self._client_provided_by_user:
-            raise NotImplementedError("Automatic client management is not implemented. Please provide a connected ContainerClient.")
+            raise NotImplementedError(
+                "Automatic client management is not implemented. Please provide a connected ContainerClient."
+            )
 
         try:
-            await self._connected_client.create_container()
+            await self._blob_service_client.create_container(name=self._container_name, public_access=None)
         except ResourceExistsError:
             pass
 

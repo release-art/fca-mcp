@@ -7,9 +7,9 @@ import azure.data.tables.aio as azure_tables_aio
 import azure.storage.blob.aio as azure_blob_aio
 import azure.storage.queue.aio as azure_queue_aio
 
-from .. import settings as app_settings_module
-
 import fca_mcp
+
+from .. import settings as app_settings_module
 
 logger = logging.getLogger(__name__)
 

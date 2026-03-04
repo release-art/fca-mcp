@@ -19,8 +19,8 @@ export AUTH0_DOMAIN="${AUTH0_DOMAIN:-op://Auth0 - dev/MCP Auth0 App/OAuth Domain
 export AUTH0_AUDIENCE="${AUTH0_AUDIENCE:-op://Auth0 - dev/MCP Auth0 App/OAuth Audience}"
 export AUTH0_CLIENT_ID="${AUTH0_CLIENT_ID:-op://Auth0 - dev/MCP Auth0 App/OAuth Client ID}"
 export AUTH0_CLIENT_SECRET="${AUTH0_CLIENT_SECRET:-op://Auth0 - dev/MCP Auth0 App/OAuth Client Secret}"
-export AUTH0_JWT_SIGNING_KEY="secret"
-export AUTH0_STORAGE_ENCRYPTION_KEY="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+export AUTH0_JWT_SIGNING_KEY="secretsecretsecretsecretsecretsecretsecretsecretsecretsecretsecretsecret"
+export AUTH0_STORAGE_ENCRYPTION_KEY="YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE="
 
 
 export AZURITE_HOSTNAME="${AZURITE_HOSTNAME:-localhost}"

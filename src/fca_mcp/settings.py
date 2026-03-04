@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import base64
-import functools
 import enum
+import functools
 from typing import Annotated, Literal
 
 from pydantic import Field, HttpUrl, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 @enum.unique
 class AzureCredentialType(enum.StrEnum):
@@ -16,6 +17,7 @@ class AzureCredentialType(enum.StrEnum):
 
     NONE = "none"
     DEFAULT = "default"
+
 
 class AzureSettings(BaseSettings):
     """Azure storage configuration settings."""
@@ -38,6 +40,7 @@ class AzureSettings(BaseSettings):
             description="Azure Storage connection string",
         ),
     ]
+
 
 class Auth0Settings(BaseSettings):
     """Auth0 OAuth configuration settings."""
