@@ -7,6 +7,8 @@ on:
     types:
       - completed
 
+env:
+  LATEST_TAG: "fca-mcp:latest"
 
 jobs:
   start:
