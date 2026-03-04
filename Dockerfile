@@ -33,7 +33,10 @@ RUN pdm install --frozen-lockfile --dev --no-self
 ########################################## TEST stage ##########################################
 FROM base AS test
 
+RUN pdm install --frozen-lockfile --dev --no-self
 RUN pdm run pip install --no-cache-dir --prefix=/app/.venv --no-deps --no-warn-script-location dist/*.whl
+
+COPY tests/ ./tests/
 RUN pdm run pytest
 
 ########################################## Production stage ##########################################
