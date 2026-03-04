@@ -15,6 +15,7 @@ def get_auth_provider() -> AuthProvider:
         audience=settings.auth0.audience,
         client_id=settings.auth0.client_id,
         client_secret=settings.auth0.client_secret,
+        jwt_signing_key=settings.auth0.jwt_signing_key,
         base_url=settings.get_base_url(),
-        config_url=f"{settings.get_base_url()}/.well-known/openid-configuration",
+        config_url=f"https://{settings.auth0.domain}/.well-known/openid-configuration",
     )

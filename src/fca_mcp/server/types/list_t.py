@@ -8,7 +8,7 @@ ModelT = typing.TypeVar("ModelT", bound=pydantic.BaseModel)
 
 
 class PaginatedList(pydantic.BaseModel, typing.Generic[ModelT]):
-    items: typing.List[ModelT]
+    items: typing.Annotated[typing.List[ModelT], pydantic.Field()]
     has_next: typing.Annotated[
         bool,
         pydantic.Field(

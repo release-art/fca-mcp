@@ -5,8 +5,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 
 import fastapi
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware as FastAPICORSMiddleware
 from fastmcp.utilities.lifespan import combine_lifespans
+from starlette.middleware import Middleware as StarletteMiddleware
+from starlette.middleware.cors import CORSMiddleware as StarletteCORSMiddleware
 
 import fca_mcp
 
@@ -27,15 +29,6 @@ async def health():
     }
 
 
-well_known_router = fastapi.APIRouter(prefix="/.well-known", tags=["Well-Known"])
-
-
-@well_known_router.get("/oauth-authorization-server")
-async def openid_configuration(app: fca_mcp.app.FcaMcpAppT):
-    """Forward OpenID configuration requests to the FastMCP HTTP app."""
-    return 42
-
-
 @asynccontextmanager
 async def http_lifespan(app: fastapi.FastAPI):
     logger.debug("Starting up the HTTP app...")
@@ -43,10 +36,29 @@ async def http_lifespan(app: fastapi.FastAPI):
     logger.debug("Shutting down the HTTP app...")
 
 
+MCP_PATH = "/mcp"
+
+
 def get_fastapi_app() -> fastapi.FastAPI:
     """Get the FastAPI application instance."""
     mcp = fca_mcp.server.get_server()
-    mcp_app = mcp.http_app(path="/")
+    mcp_app = mcp.http_app(
+        path=MCP_PATH,
+        middleware=[
+            StarletteMiddleware(
+                StarletteCORSMiddleware,
+                allow_origins=["*"],  # Allow all origins; use specific origins for security
+                allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+                allow_headers=[
+                    "mcp-protocol-version",
+                    "mcp-session-id",
+                    "Authorization",
+                    "Content-Type",
+                ],
+                expose_headers=["mcp-session-id"],
+            )
+        ],
+    )
     app = fastapi.FastAPI(
         title="FCA MCP Server API",
         description="HTTP API for FCA regulatory data with AI analysis",
@@ -62,14 +74,23 @@ def get_fastapi_app() -> fastapi.FastAPI:
     )
     app.include_router(healthchecks)
     if mcp.auth is not None:
-        print("Auth provider is set, including auth routes")
-        # app.include_router(well_known_router)
+        logger.info("Auth provider is set, including auth routes")
+        well_known_router = fastapi.APIRouter(prefix="", tags=["Well-Known"])
+        for route in mcp.auth.get_well_known_routes(mcp_path=MCP_PATH):
+            logger.info(f"Adding well-known route: {route.path}")
+            well_known_router.add_api_route(
+                route.path,
+                route.endpoint,
+                methods=route.methods,
+                name=route.name,
+            )
+        app.include_router(well_known_router)
     app.add_middleware(
-        CORSMiddleware,
+        FastAPICORSMiddleware,
         allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.mount("/mcp", mcp_app)
+    app.mount("", mcp_app)
     return app
