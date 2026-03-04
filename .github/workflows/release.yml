@@ -2,7 +2,7 @@ name: Release
 on:
   workflow_run:
     workflows: ["CI"]
-    branches: [main]
+    branches: [main, ci-1]
     types:
       - completed
 
@@ -28,7 +28,13 @@ jobs:
           registry: ${{ vars.RELEASE_ART_CONTAINER_REGISTRY_HOST }}
           username: ${{ vars.RELEASE_ART_CONTAINER_REGISTRY_USER }}
           password: ${{ secrets.RELEASE_ART_CONTAINER_REGISTRY_TOKEN }}
-      - name: Build the image
+      - name: Build the test image
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          load: true
+          target: test
+      - name: Build & push the image
         uses: docker/build-push-action@v6
         with:
           push: false
