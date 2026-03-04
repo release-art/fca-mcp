@@ -49,3 +49,4 @@ def test_settings() -> fca_mcp.settings.Settings:
 def get_test_settings(mocker, test_settings: fca_mcp.settings.Settings):
     """Fixture to get test settings."""
     mocker.patch("fca_mcp.settings.get_settings", return_value=test_settings)
+

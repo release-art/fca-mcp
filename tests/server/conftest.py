@@ -30,8 +30,10 @@ def mock_fca_api(mocker, original_client_cls, caching_mock_api):
     return mock_client
 
 
+
 @pytest.fixture
 def mcp_app():
+    """Create test MCP server with mocked authentication."""
     return fca_mcp.server.get_server()
 
 
