@@ -7,7 +7,7 @@ import enum
 import functools
 from typing import Annotated, Literal
 
-from pydantic import Field, HttpUrl, RedisDsn, field_validator
+from pydantic import Field, HttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -98,8 +98,9 @@ class Auth0Settings(BaseSettings):
             if len(decoded) != 32:
                 raise ValueError(f"must be 32 bytes when decoded, got {len(decoded)} bytes")
         except Exception as e:
-            raise ValueError(f"must be 32 url-safe base64-encoded bytes: {e}")
+            raise ValueError(f"must be 32 url-safe base64-encoded bytes: {e}") from e
         return v
+
 
 class FcaApiSettings(BaseSettings):
     """FCA API credentials and configuration."""

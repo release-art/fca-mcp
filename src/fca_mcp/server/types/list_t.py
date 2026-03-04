@@ -19,6 +19,8 @@ class PaginatedList(pydantic.BaseModel, typing.Generic[ModelT]):
     start_index: typing.Annotated[
         int,
         pydantic.Field(
-            description="The index of the first item in `items` within the full list of items that could be returned by the API",
+            description=(
+                "The index of the first item in `items` within the full list of items that could be returned by the API"
+            ),
         ),
     ]

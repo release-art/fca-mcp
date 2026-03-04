@@ -10,6 +10,7 @@ pytest_plugins = [
     "tests.test_plugins.mock_client",
 ]
 
+
 @pytest.fixture
 def test_settings() -> fca_mcp.settings.Settings:
     """Test settings fixture."""
@@ -45,8 +46,8 @@ def test_settings() -> fca_mcp.settings.Settings:
         api_version="v1",
     )
 
+
 @pytest.fixture(autouse=True)
 def get_test_settings(mocker, test_settings: fca_mcp.settings.Settings):
     """Fixture to get test settings."""
     mocker.patch("fca_mcp.settings.get_settings", return_value=test_settings)
-
