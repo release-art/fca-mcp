@@ -3,21 +3,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fca-mcp-server
+    container_name: r5e-mcp-server
     ports:
       - "8000:8000"
     environment:
       - FCA_API_EMAIL=${FCA_API_EMAIL}
       - FCA_API_KEY=${FCA_API_KEY}
       - PYTHONUNBUFFERED=1
-    env_file:
-      - .env
-    volumes:
-      - ./mcp_fca:/app/mcp_fca
-      - ./src:/app/src
-      - ./fca_mcp_server.py:/app/fca_mcp_server.py
-      - ./.env:/app/.env:ro
-    restart: unless-stopped
     command: pdm run python fca_mcp_server.py --http-mode --host 0.0.0.0 --port 8000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -25,6 +17,15 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    stdin_open: false
-    tty: false
 
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    ports:
+      - "10000:10000"  # Blob
+      - "10001:10001"  # Queue
+      - "10002:10002"  # Table
+    volumes:
+      - azurite_data:/data
+
+volumes:
+  azurite_data:

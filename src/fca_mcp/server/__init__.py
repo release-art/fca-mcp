@@ -31,7 +31,7 @@ async def mcp_lifespan(mcp_app: fastmcp.FastMCP):
 
 def get_server() -> fastmcp.FastMCP:
     main = fastmcp.FastMCP(
-        "fca-api",
+        "Release.art public MCP",
         lifespan=mcp_lifespan,
         website_url="https://www.release.art/",
         icons=[
