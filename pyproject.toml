@@ -35,6 +35,9 @@ dependencies = [
     "fastmcp>=3,<4",
     "asyncstdlib>=3.13.1",
     "pydantic-settings>=2.13.1",
+    "azure-data-tables>=12.7.0",
+    "azure-storage-blob>=12.28.0",
+    "py-key-value-aio>=0.4.4",
 ]
 
 readme = "README.md"

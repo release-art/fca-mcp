@@ -2,8 +2,6 @@ FROM python:3.13-slim AS base
 
 WORKDIR /app
 
-
-
 # Install PDM
 RUN pip install --upgrade --no-cache-dir pdm pip
 
@@ -21,14 +19,24 @@ RUN pdm build --no-sdist
 # Expose HTTP port
 EXPOSE 8000
 
-FROM python:3.13-slim AS interactive-work
+########################################## Interactive development stage ##########################################
+FROM base AS interactive-work
 
 WORKDIR /app
 
 # Install PDM
-RUN pip install --upgrade --no-cache-dir pdm pip
-COPY --from=base /app /app
 
+ENV PYTHONPATH=/app/src:${PYTHONPATH}
+
+RUN pdm install --frozen-lockfile --dev --no-self
+
+########################################## TEST stage ##########################################
+FROM base AS test
+
+RUN pdm run pip install --no-cache-dir --prefix=/app/.venv --no-deps --no-warn-script-location dist/*.whl
+RUN pdm run pytest
+
+########################################## Production stage ##########################################
 FROM python:3.13-slim AS release
 
 WORKDIR /app

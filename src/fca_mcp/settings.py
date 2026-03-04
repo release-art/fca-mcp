@@ -8,6 +8,20 @@ from typing import Annotated, Literal
 from pydantic import Field, HttpUrl, RedisDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+class AzureSettings(BaseSettings):
+    """Azure storage configuration settings."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="AZURE_",
+        extra="forbid",
+    )
+
+    storage_connection_string: Annotated[
+        str,
+        Field(
+            description="Azure Storage connection string",
+        ),
+    ]
 
 class Auth0Settings(BaseSettings):
     """Auth0 OAuth configuration settings."""
@@ -273,6 +287,7 @@ class Settings(BaseSettings):
     ]
 
     # Nested settings
+    azure: Annotated[AzureSettings, Field(default_factory=AzureSettings)]
     auth0: Annotated[Auth0Settings, Field(default_factory=Auth0Settings)]
     redis: Annotated[RedisSettings, Field(default_factory=RedisSettings)]
     fca_api: Annotated[FcaApiSettings, Field(default_factory=FcaApiSettings)]

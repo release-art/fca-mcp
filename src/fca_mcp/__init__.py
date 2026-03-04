@@ -16,6 +16,7 @@ from . import (
     server,
     settings,
     uvcorn_app,
+    azure,
 )
 
 logger = std_logging.getLogger(__name__)
