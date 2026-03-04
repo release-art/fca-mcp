@@ -101,79 +101,6 @@ class Auth0Settings(BaseSettings):
             raise ValueError(f"must be 32 url-safe base64-encoded bytes: {e}")
         return v
 
-
-class RedisSettings(BaseSettings):
-    """Redis connection and caching configuration."""
-
-    model_config = SettingsConfigDict(
-        env_prefix="REDIS_",
-        extra="forbid",
-    )
-
-    url: Annotated[
-        RedisDsn,
-        Field(
-            default="redis://localhost:6379/0",
-            description="Redis connection URL",
-        ),
-    ]
-    password: Annotated[
-        str | None,
-        Field(
-            default=None,
-            description="Redis password (if required)",
-        ),
-    ]
-    db: Annotated[
-        int,
-        Field(
-            default=0,
-            ge=0,
-            le=15,
-            description="Redis database number (0-15)",
-        ),
-    ]
-    max_connections: Annotated[
-        int,
-        Field(
-            default=10,
-            ge=1,
-            description="Maximum number of connections in the pool",
-        ),
-    ]
-    socket_timeout: Annotated[
-        float,
-        Field(
-            default=5.0,
-            gt=0,
-            description="Socket timeout in seconds",
-        ),
-    ]
-    socket_connect_timeout: Annotated[
-        float,
-        Field(
-            default=5.0,
-            gt=0,
-            description="Socket connection timeout in seconds",
-        ),
-    ]
-    cache_ttl: Annotated[
-        int,
-        Field(
-            default=3600,
-            ge=0,
-            description="Default cache TTL in seconds (0 = no expiration)",
-        ),
-    ]
-    enabled: Annotated[
-        bool,
-        Field(
-            default=True,
-            description="Enable Redis caching",
-        ),
-    ]
-
-
 class FcaApiSettings(BaseSettings):
     """FCA API credentials and configuration."""
 
@@ -320,7 +247,6 @@ class Settings(BaseSettings):
     # Nested settings
     azure: Annotated[AzureSettings, Field(default_factory=AzureSettings)]
     auth0: Annotated[Auth0Settings, Field(default_factory=Auth0Settings)]
-    redis: Annotated[RedisSettings, Field(default_factory=RedisSettings)]
     fca_api: Annotated[FcaApiSettings, Field(default_factory=FcaApiSettings)]
     server: Annotated[ServerSettings, Field(default_factory=ServerSettings)]
     logging: Annotated[LoggingSettings, Field(default_factory=LoggingSettings)]
