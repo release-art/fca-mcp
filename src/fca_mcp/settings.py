@@ -2,11 +2,20 @@
 
 from __future__ import annotations
 
+import base64
 import functools
+import enum
 from typing import Annotated, Literal
 
-from pydantic import Field, HttpUrl, RedisDsn
+from pydantic import Field, HttpUrl, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+@enum.unique
+class AzureCredentialType(enum.StrEnum):
+    """Types of Azure credentials supported for authentication."""
+
+    NONE = "none"
+    DEFAULT = "default"
 
 class AzureSettings(BaseSettings):
     """Azure storage configuration settings."""
@@ -15,6 +24,13 @@ class AzureSettings(BaseSettings):
         env_prefix="AZURE_",
         extra="forbid",
     )
+
+    credential: Annotated[
+        AzureCredentialType,
+        Field(
+            description="Azure credential type to use for authentication",
+        ),
+    ]
 
     storage_connection_string: Annotated[
         str,
@@ -69,6 +85,18 @@ class Auth0Settings(BaseSettings):
             description="Encryption key for securely storing sensitive data (optional)",
         ),
     ]
+
+    @field_validator("storage_encryption_key")
+    @classmethod
+    def validate_storage_encryption_key(cls, v: str) -> str:
+        """Validate that storage_encryption_key is 32 url-safe base64-encoded bytes."""
+        try:
+            decoded = base64.urlsafe_b64decode(v)
+            if len(decoded) != 32:
+                raise ValueError(f"must be 32 bytes when decoded, got {len(decoded)} bytes")
+        except Exception as e:
+            raise ValueError(f"must be 32 url-safe base64-encoded bytes: {e}")
+        return v
 
 
 class RedisSettings(BaseSettings):

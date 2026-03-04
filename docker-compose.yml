@@ -19,6 +19,7 @@ services:
       - AUTH0_STORAGE_ENCRYPTION_KEY
       - SERVER_BASE_URL
       - AZURE_STORAGE_CONNECTION_STRING
+      - AZURE_CREDENTIAL
       - PYTHONUNBUFFERED=1
     volumes:
       - ./src:/app/src

@@ -6,6 +6,7 @@ import logging
 
 import fastmcp
 import fca_api
+import asyncio
 from fastmcp.server.lifespan import lifespan
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 from fastmcp.server.middleware.logging import LoggingMiddleware

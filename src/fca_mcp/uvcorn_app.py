@@ -41,6 +41,7 @@ MCP_PATH = "/mcp"
 
 def get_fastapi_app() -> fastapi.FastAPI:
     """Get the FastAPI application instance."""
+    logger.info("Creating FastAPI application...")
     mcp = fca_mcp.server.get_server()
     mcp_app = mcp.http_app(
         path=MCP_PATH,
