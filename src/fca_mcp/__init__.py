@@ -17,6 +17,7 @@ from . import (
     server,
     settings,
     uvcorn_app,
+    http,
 )
 
 logger = std_logging.getLogger(__name__)
