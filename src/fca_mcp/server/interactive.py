@@ -1,0 +1,371 @@
+"""Interactive web UI for the FCA MCP server.
+
+Provides a browser-based interface with Auth0 SPA SDK login
+and tool explorer that calls MCP tools via JSON-RPC.
+"""
+
+from __future__ import annotations
+
+import html
+import json
+import logging
+
+import fastapi
+from fastapi.responses import HTMLResponse
+
+import fca_mcp.settings
+
+logger = logging.getLogger(__name__)
+
+interactive_router = fastapi.APIRouter(prefix="/interactive", tags=["Interactive"])
+
+
+@interactive_router.get("/config")
+async def interactive_config() -> dict:
+    """Return Auth0 config for the SPA SDK (public, non-secret values only)."""
+    settings = fca_mcp.settings.get_settings()
+    return {
+        "auth0_domain": settings.auth0.domain,
+        "auth0_audience": settings.auth0.audience,
+        "auth0_client_id": settings.auth0.interactive_client_id,
+    }
+
+
+@interactive_router.get("/", response_class=HTMLResponse)
+async def interactive_ui(request: fastapi.Request) -> HTMLResponse:
+    """Serve the interactive MCP tool explorer."""
+    settings = fca_mcp.settings.get_settings()
+    domain = html.escape(settings.auth0.domain)
+    audience = html.escape(settings.auth0.audience)
+    client_id = html.escape(settings.auth0.interactive_client_id or "")
+    base_url = str(request.base_url).rstrip("/")
+
+    return HTMLResponse(content=_render_page(domain, audience, client_id, base_url))
+
+
+def _render_page(domain: str, audience: str, client_id: str, base_url: str) -> str:
+    mcp_url = json.dumps(f"{base_url}/mcp")
+
+    return f"""\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FCA MCP Interactive</title>
+<script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+<style>
+* {{ margin: 0; padding: 0; box-sizing: border-box; }}
+body {{
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f9fafb; color: #0a0a0a; min-height: 100vh;
+}}
+.header {{
+  background: #fff; border-bottom: 1px solid #e5e7eb; padding: 1rem 2rem;
+  display: flex; justify-content: space-between; align-items: center;
+}}
+.header h1 {{ font-size: 1.25rem; font-weight: 600; color: #111827; }}
+.header .user-info {{ display: flex; align-items: center; gap: 1rem; font-size: 0.875rem; color: #6b7280; }}
+.main {{ max-width: 64rem; margin: 2rem auto; padding: 0 1rem; }}
+.login-card {{
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 3rem;
+  text-align: center; max-width: 28rem; margin: 4rem auto;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}}
+.login-card h2 {{ margin-bottom: 1rem; color: #111827; }}
+.login-card p {{ margin-bottom: 1.5rem; color: #6b7280; font-size: 0.9375rem; }}
+.btn {{
+  padding: 0.625rem 1.5rem; font-size: 0.9375rem; font-weight: 500; border-radius: 0.5rem;
+  border: none; cursor: pointer; transition: all 0.15s; font-family: inherit;
+}}
+.btn:hover {{ transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }}
+.btn-primary {{ background: #2563eb; color: #fff; }}
+.btn-secondary {{ background: #6b7280; color: #fff; }}
+.btn-sm {{ padding: 0.375rem 0.75rem; font-size: 0.8125rem; }}
+.tools-grid {{ display: grid; gap: 1rem; }}
+.tool-card {{
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 0.75rem;
+  overflow: hidden; transition: box-shadow 0.15s;
+}}
+.tool-card:hover {{ box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }}
+.tool-header {{
+  padding: 1rem 1.25rem; cursor: pointer; display: flex;
+  justify-content: space-between; align-items: center;
+}}
+.tool-header:hover {{ background: #f9fafb; }}
+.tool-name {{ font-weight: 600; font-size: 0.9375rem; color: #111827; font-family: monospace; }}
+.tool-desc {{ font-size: 0.8125rem; color: #6b7280; margin-top: 0.25rem; }}
+.tool-expand {{ color: #9ca3af; font-size: 0.75rem; transition: transform 0.2s; }}
+.tool-expand.open {{ transform: rotate(90deg); }}
+.tool-body {{ display: none; padding: 0 1.25rem 1.25rem; border-top: 1px solid #f3f4f6; }}
+.tool-body.open {{ display: block; }}
+.form-group {{ margin-top: 0.75rem; }}
+.form-group label {{
+  display: block; font-size: 0.8125rem; font-weight: 600;
+  color: #374151; margin-bottom: 0.25rem;
+}}
+.form-group .field-desc {{ font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.25rem; }}
+.form-group input, .form-group textarea, .form-group select {{
+  width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db;
+  border-radius: 0.375rem; font-size: 0.875rem; font-family: inherit;
+}}
+.form-group textarea {{ resize: vertical; min-height: 3rem; }}
+.form-actions {{ margin-top: 1rem; display: flex; gap: 0.5rem; }}
+.result-box {{
+  margin-top: 1rem; background: #f9fafb; border: 1px solid #e5e7eb;
+  border-radius: 0.5rem; padding: 1rem; font-family: monospace;
+  font-size: 0.8125rem; white-space: pre-wrap; word-break: break-word;
+  max-height: 24rem; overflow-y: auto;
+}}
+.result-box.error {{ background: #fef2f2; border-color: #fecaca; color: #991b1b; }}
+.loading {{ color: #6b7280; font-style: italic; }}
+.badge {{
+  display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px;
+  font-size: 0.6875rem; font-weight: 500; background: #dbeafe; color: #1e40af;
+}}
+.badge.readonly {{ background: #d1fae5; color: #065f46; }}
+</style>
+</head>
+<body>
+
+<div id="app-header" class="header" style="display:none">
+  <h1>FCA MCP Interactive</h1>
+  <div class="user-info">
+    <span id="user-email"></span>
+    <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<div id="login-section" class="main" style="display:none">
+  <div class="login-card">
+    <h2>FCA MCP Interactive</h2>
+    <p>Explore and call FCA Financial Services Register tools directly from your browser.</p>
+    <button class="btn btn-primary" onclick="login()">Login with Auth0</button>
+  </div>
+</div>
+
+<div id="tools-section" class="main" style="display:none">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+    <h2 style="font-size:1.125rem; color:#111827;">Available Tools</h2>
+    <span id="tool-count" class="badge"></span>
+  </div>
+  <div id="tools-grid" class="tools-grid">
+    <p class="loading">Loading tools...</p>
+  </div>
+</div>
+
+<script>
+const AUTH0_DOMAIN = {json.dumps(domain)};
+const AUTH0_AUDIENCE = {json.dumps(audience)};
+const AUTH0_CLIENT_ID = {json.dumps(client_id)};
+const MCP_URL = {mcp_url};
+
+let auth0Client = null;
+let accessToken = null;
+let toolsData = [];
+let mcpInitialized = false;
+let msgId = 0;
+
+async function initAuth0() {{
+  auth0Client = await auth0.createAuth0Client({{
+    domain: AUTH0_DOMAIN,
+    clientId: AUTH0_CLIENT_ID,
+    authorizationParams: {{
+      audience: AUTH0_AUDIENCE,
+      redirect_uri: window.location.origin + '/interactive/',
+    }},
+    cacheLocation: 'localstorage',
+  }});
+
+  if (window.location.search.includes('code=')) {{
+    await auth0Client.handleRedirectCallback();
+    window.history.replaceState({{}}, '', '/interactive/');
+  }}
+
+  const isAuthenticated = await auth0Client.isAuthenticated();
+  if (isAuthenticated) {{
+    await showAuthenticated();
+  }} else {{
+    document.getElementById('login-section').style.display = '';
+  }}
+}}
+
+async function login() {{
+  await auth0Client.loginWithRedirect();
+}}
+
+async function logout() {{
+  await auth0Client.logout({{ logoutParams: {{ returnTo: window.location.origin + '/interactive/' }} }});
+}}
+
+async function showAuthenticated() {{
+  const user = await auth0Client.getUser();
+  document.getElementById('user-email').textContent = user.email || user.name || 'User';
+  document.getElementById('app-header').style.display = '';
+  document.getElementById('login-section').style.display = 'none';
+  document.getElementById('tools-section').style.display = '';
+  accessToken = await auth0Client.getTokenSilently();
+  await loadTools();
+}}
+
+async function mcpRequest(method, params) {{
+  const id = ++msgId;
+  const resp = await fetch(MCP_URL, {{
+    method: 'POST',
+    headers: {{
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + accessToken,
+    }},
+    body: JSON.stringify({{ jsonrpc: '2.0', id, method, params: params || {{}} }}),
+  }});
+  const text = await resp.text();
+  const lines = text.trim().split('\\n');
+  for (const line of lines) {{
+    try {{
+      const parsed = JSON.parse(line);
+      if (parsed.id === id) return parsed;
+      if (parsed.result) return parsed;
+    }} catch (e) {{ /* skip non-JSON lines */ }}
+  }}
+  throw new Error('No matching response found');
+}}
+
+async function ensureInitialized() {{
+  if (mcpInitialized) return;
+  await mcpRequest('initialize', {{
+    protocolVersion: '2025-03-26',
+    capabilities: {{}},
+    clientInfo: {{ name: 'FCA Interactive', version: '1.0.0' }},
+  }});
+  mcpInitialized = true;
+}}
+
+async function loadTools() {{
+  try {{
+    await ensureInitialized();
+    const resp = await mcpRequest('tools/list', {{}});
+    if (resp.error) throw new Error(resp.error.message || JSON.stringify(resp.error));
+    toolsData = resp.result.tools || [];
+    renderTools();
+  }} catch (e) {{
+    document.getElementById('tools-grid').innerHTML =
+      '<div class="result-box error">Failed to load tools: ' + escapeHtml(e.message) + '</div>';
+  }}
+}}
+
+function renderTools() {{
+  const grid = document.getElementById('tools-grid');
+  document.getElementById('tool-count').textContent = toolsData.length + ' tools';
+  if (toolsData.length === 0) {{
+    grid.innerHTML = '<p style="color:#6b7280">No tools available.</p>';
+    return;
+  }}
+  grid.innerHTML = toolsData.map((t, i) => renderToolCard(t, i)).join('');
+}}
+
+function renderToolCard(tool, idx) {{
+  const props = tool.inputSchema?.properties || {{}};
+  const required = tool.inputSchema?.required || [];
+  const annotations = tool.annotations || {{}};
+  const badges = [];
+  if (annotations.readOnlyHint) badges.push('<span class="badge readonly">read-only</span>');
+
+  let fields = '';
+  for (const [name, schema] of Object.entries(props)) {{
+    const isReq = required.includes(name);
+    const desc = schema.description || '';
+    const type = schema.type || 'string';
+    let input;
+    if (type === 'integer' || type === 'number') {{
+      input = '<input type="number" id="field-' + idx + '-' + name + '" ' + (isReq ? 'required' : '') + '>';
+    }} else if (type === 'boolean') {{
+      input = '<select id="field-' + idx + '-' + name + '">'
+        + '<option value="">-- select --</option>'
+        + '<option value="true">true</option>'
+        + '<option value="false">false</option></select>';
+    }} else {{
+      input = '<input type="text" id="field-' + idx + '-' + name + '" ' + (isReq ? 'required' : '') + '>';
+    }}
+    fields += '<div class="form-group">'
+      + '<label>' + escapeHtml(name) + (isReq ? ' *' : '') + '</label>'
+      + (desc ? '<div class="field-desc">' + escapeHtml(desc) + '</div>' : '')
+      + input + '</div>';
+  }}
+
+  return '<div class="tool-card">'
+    + '<div class="tool-header" onclick="toggleTool(' + idx + ')">'
+    + '<div><div class="tool-name">' + escapeHtml(tool.name) + '</div>'
+    + (tool.description ? '<div class="tool-desc">' + escapeHtml(tool.description) + '</div>' : '')
+    + '</div>'
+    + '<div style="display:flex;align-items:center;gap:0.5rem">'
+    + badges.join('')
+    + '<span class="tool-expand" id="expand-' + idx + '">&#9654;</span>'
+    + '</div></div>'
+    + '<div class="tool-body" id="body-' + idx + '">'
+    + (fields || '<p style="color:#6b7280;font-size:0.8125rem">No parameters required.</p>')
+    + '<div class="form-actions">'
+    + '<button class="btn btn-primary btn-sm" onclick="callTool(' + idx + ')">Call Tool</button>'
+    + '</div>'
+    + '<div id="result-' + idx + '"></div>'
+    + '</div></div>';
+}}
+
+function toggleTool(idx) {{
+  const body = document.getElementById('body-' + idx);
+  const expand = document.getElementById('expand-' + idx);
+  body.classList.toggle('open');
+  expand.classList.toggle('open');
+}}
+
+async function callTool(idx) {{
+  const tool = toolsData[idx];
+  const props = tool.inputSchema?.properties || {{}};
+  const args = {{}};
+
+  for (const [name, schema] of Object.entries(props)) {{
+    const el = document.getElementById('field-' + idx + '-' + name);
+    if (!el) continue;
+    let val = el.value.trim();
+    if (!val) continue;
+    const type = schema.type || 'string';
+    if (type === 'integer') val = parseInt(val, 10);
+    else if (type === 'number') val = parseFloat(val);
+    else if (type === 'boolean') val = val === 'true';
+    args[name] = val;
+  }}
+
+  const resultDiv = document.getElementById('result-' + idx);
+  resultDiv.innerHTML = '<div class="result-box loading">Calling ' + escapeHtml(tool.name) + '...</div>';
+
+  try {{
+    accessToken = await auth0Client.getTokenSilently();
+    await ensureInitialized();
+    const resp = await mcpRequest('tools/call', {{ name: tool.name, arguments: args }});
+    if (resp.error) throw new Error(resp.error.message || JSON.stringify(resp.error));
+    const result = resp.result;
+    if (result.isError) {{
+      const errText = (result.content || []).map(c => c.text || '').join('\\n');
+      resultDiv.innerHTML = '<div class="result-box error">'
+        + escapeHtml(errText || 'Tool returned an error') + '</div>';
+    }} else {{
+      const text = (result.content || []).map(c => c.text || JSON.stringify(c, null, 2)).join('\\n');
+      resultDiv.innerHTML = '<div class="result-box">' + escapeHtml(text) + '</div>';
+    }}
+  }} catch (e) {{
+    resultDiv.innerHTML = '<div class="result-box error">Error: ' + escapeHtml(e.message) + '</div>';
+  }}
+}}
+
+function escapeHtml(str) {{
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}}
+
+initAuth0().catch(e => {{
+  console.error('Auth0 init error:', e);
+  document.getElementById('login-section').style.display = '';
+}});
+</script>
+</body>
+</html>"""

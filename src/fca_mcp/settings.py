@@ -9,10 +9,18 @@ import logging
 import os
 from typing import Annotated, Literal
 
-from pydantic import Field, HttpUrl, field_validator
+from pydantic import Field, HttpUrl, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
+
+
+@enum.unique
+class AuthMode(enum.StrEnum):
+    """Authentication mode selection."""
+
+    REMOTE = "remote"
+    PROXY = "proxy"
 
 
 @enum.unique
@@ -88,6 +96,13 @@ class Auth0Settings(BaseSettings):
         extra="forbid",
     )
 
+    mode: Annotated[
+        AuthMode,
+        Field(
+            default=AuthMode.REMOTE,
+            description="Auth mode: 'remote' (JWT validation only) or 'proxy' (full OAuth proxy)",
+        ),
+    ]
     domain: Annotated[
         str,
         Field(
@@ -102,35 +117,61 @@ class Auth0Settings(BaseSettings):
             description="Auth0 API audience identifier",
         ),
     ]
-    client_id: Annotated[
-        str,
+    interactive_client_id: Annotated[
+        str | None,
         Field(
-            description="Auth0 client ID (optional, for client credentials flow)",
+            default=None,
+            description="Auth0 SPA client ID for the interactive web UI",
+        ),
+    ]
+    client_id: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Auth0 client ID (required for proxy mode)",
         ),
     ]
     client_secret: Annotated[
-        str,
+        str | None,
         Field(
-            description="Auth0 client secret (optional, for client credentials flow)",
+            default=None,
+            description="Auth0 client secret (required for proxy mode)",
         ),
     ]
     jwt_signing_key: Annotated[
-        str,
+        str | None,
         Field(
-            description="JWT signing key for validating tokens (optional)",
+            default=None,
+            description="JWT signing key for proxy mode token issuance (required for proxy mode)",
         ),
     ]
     storage_encryption_key: Annotated[
-        str,
+        str | None,
         Field(
-            description="Encryption key for securely storing sensitive data (optional)",
+            default=None,
+            description="Encryption key for client token storage (required for proxy mode)",
         ),
     ]
 
+    @model_validator(mode="after")
+    def validate_proxy_fields(self) -> Auth0Settings:
+        """Ensure proxy-only fields are set when mode is 'proxy'."""
+        if self.mode == AuthMode.PROXY:
+            missing = [
+                f
+                for f in ("client_id", "client_secret", "jwt_signing_key", "storage_encryption_key")
+                if getattr(self, f) is None
+            ]
+            if missing:
+                raise ValueError(f"Auth0 proxy mode requires: {', '.join(missing)}")
+        return self
+
     @field_validator("storage_encryption_key")
     @classmethod
-    def validate_storage_encryption_key(cls, v: str) -> str:
+    def validate_storage_encryption_key(cls, v: str | None) -> str | None:
         """Validate that storage_encryption_key is 32 url-safe base64-encoded bytes."""
+        if v is None:
+            return v
         try:
             decoded = base64.urlsafe_b64decode(v)
             if len(decoded) != 32:

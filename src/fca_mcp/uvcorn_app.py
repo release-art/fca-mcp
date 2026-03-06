@@ -75,6 +75,12 @@ def get_fastapi_app() -> fastapi.FastAPI:
         fastmcp_http_app=mcp_app,
     )
     app.include_router(healthchecks)
+    settings = fca_mcp.settings.get_settings()
+    if settings.auth0.interactive_client_id:
+        from fca_mcp.server.interactive import interactive_router
+
+        logger.info("Interactive client ID configured, including interactive UI routes")
+        app.include_router(interactive_router)
     if mcp.auth is not None:
         logger.info("Auth provider is set, including auth routes")
         well_known_router = fastapi.APIRouter(prefix="", tags=["Well-Known"])
