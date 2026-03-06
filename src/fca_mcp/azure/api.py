@@ -26,8 +26,10 @@ class AzureAPI:
     def __init__(self, settings: app_settings_module.AzureSettings) -> None:
         self.settings = settings
         # When using connection string with AccountKey (Azurite), don't pass credential
-        # When using DefaultAzureCredential (production), pass it explicitly
+        # When using DefaultAzureCredential (production), construct from account URLs
         if self.settings.credential == fca_mcp.settings.AzureCredentialType.NONE:
+            if not self.settings.storage_connection_string:
+                raise ValueError("storage_connection_string is required when credential is NONE")
             self.queue_service_client = azure_queue_aio.QueueServiceClient.from_connection_string(
                 conn_str=self.settings.storage_connection_string,
             )
@@ -38,17 +40,24 @@ class AzureAPI:
                 conn_str=self.settings.storage_connection_string,
             )
         elif self.settings.credential == fca_mcp.settings.AzureCredentialType.DEFAULT:
+            if not self.settings.storage_account:
+                raise ValueError("storage_account is required when credential is DEFAULT")
             credential = DefaultAzureCredential()
-            self.queue_service_client = azure_queue_aio.QueueServiceClient.from_connection_string(
-                conn_str=self.settings.storage_connection_string,
+            # Construct endpoint URLs from account name or use provided endpoints
+            blob_url = self.settings.storage_blob_endpoint or f"https://{self.settings.storage_account}.blob.core.windows.net"
+            queue_url = self.settings.storage_queue_endpoint or f"https://{self.settings.storage_account}.queue.core.windows.net"
+            table_url = self.settings.storage_table_endpoint or f"https://{self.settings.storage_account}.table.core.windows.net"
+
+            self.queue_service_client = azure_queue_aio.QueueServiceClient(
+                account_url=queue_url,
                 credential=credential,
             )
-            self.blob_service_client = azure_blob_aio.BlobServiceClient.from_connection_string(
-                conn_str=self.settings.storage_connection_string,
+            self.blob_service_client = azure_blob_aio.BlobServiceClient(
+                account_url=blob_url,
                 credential=credential,
             )
-            self.table_service_client = azure_tables_aio.TableServiceClient.from_connection_string(
-                conn_str=self.settings.storage_connection_string,
+            self.table_service_client = azure_tables_aio.TableServiceClient(
+                endpoint=table_url,
                 credential=credential,
             )
         else:

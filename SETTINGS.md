@@ -20,8 +20,18 @@ Edit `.env` with your actual credentials:
 # Required settings
 AUTH0_DOMAIN=your-tenant.auth0.com
 AUTH0_AUDIENCE=https://your-api-audience
+AUTH0_STORAGE_ENCRYPTION_KEY=your-32-byte-base64-encoded-encryption-key
 FCA_API_USERNAME=your-email@example.com
 FCA_API_KEY=your-fca-api-key
+
+# Azure Storage (choose one credential type)
+# For local development with Azurite:
+AZURE_CREDENTIAL=none
+AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=...;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+
+# OR for production with DefaultAzureCredential:
+# AZURE_CREDENTIAL=default
+# AZURE_STORAGE_ACCOUNT=mycompanystorage
 
 # Optional: Redis is enabled by default at localhost:6379
 REDIS_URL=redis://localhost:6379/0
@@ -122,6 +132,42 @@ FCA API credentials and configuration.
 - `FCA_API_BASE_URL` (optional)
 - `FCA_API_TIMEOUT`
 - `FCA_API_MAX_RETRIES`
+
+### AzureSettings (`settings.azure`)
+
+Azure Storage configuration for client token persistence and state management.
+
+| Setting | Type | Required | Description |
+|---------|------|----------|-------------|
+| `credential` | `Literal["none", "default"]` | Yes | Azure credential type: "none" for connection string (Azurite/dev), "default" for DefaultAzureCredential (production) |
+| `storage_connection_string` | `str` | When credential="none" | Azure Storage connection string (for local dev with Azurite) |
+| `storage_account` | `str` | When credential="default" | Azure Storage account name (used with DefaultAzureCredential) |
+| `storage_blob_endpoint` | `str` | No | Custom blob endpoint (defaults to https://{account}.blob.core.windows.net) |
+| `storage_queue_endpoint` | `str` | No | Custom queue endpoint (defaults to https://{account}.queue.core.windows.net) |
+| `storage_table_endpoint` | `str` | No | Custom table endpoint (defaults to https://{account}.table.core.windows.net) |
+
+**Environment Variables:**
+- `AZURE_CREDENTIAL` - Required: "none" or "default"
+- `AZURE_STORAGE_CONNECTION_STRING` - Required when credential="none"
+- `AZURE_STORAGE_ACCOUNT` - Required when credential="default"
+- `AZURE_STORAGE_BLOB_ENDPOINT` (optional)
+- `AZURE_STORAGE_QUEUE_ENDPOINT` (optional)
+- `AZURE_STORAGE_TABLE_ENDPOINT` (optional)
+
+**Examples:**
+
+Local development with Azurite:
+```bash
+AZURE_CREDENTIAL=none
+AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=...;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+```
+
+Production with DefaultAzureCredential:
+```bash
+AZURE_CREDENTIAL=default
+AZURE_STORAGE_ACCOUNT=mycompanystorage
+# DefaultAzureCredential will use managed identity, Azure CLI, or other ambient credentials
+```
 
 ### ServerSettings (`settings.server`)
 

@@ -35,9 +35,42 @@ class AzureSettings(BaseSettings):
     ]
 
     storage_connection_string: Annotated[
-        str,
+        str | None,
         Field(
-            description="Azure Storage connection string",
+            default=None,
+            description="Azure Storage connection string (required for NONE credential type)",
+        ),
+    ]
+
+    storage_account: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Azure Storage account name (required for DEFAULT credential type)",
+        ),
+    ]
+
+    storage_blob_endpoint: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Azure Blob Storage endpoint URL (optional, defaults to https://{account}.blob.core.windows.net)",
+        ),
+    ]
+
+    storage_queue_endpoint: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Azure Queue Storage endpoint URL (optional, defaults to https://{account}.queue.core.windows.net)",
+        ),
+    ]
+
+    storage_table_endpoint: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Azure Table Storage endpoint URL (optional, defaults to https://{account}.table.core.windows.net)",
         ),
     ]
 
