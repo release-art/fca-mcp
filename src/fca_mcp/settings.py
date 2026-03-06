@@ -30,6 +30,7 @@ class AzureSettings(BaseSettings):
     credential: Annotated[
         AzureCredentialType,
         Field(
+            default=AzureCredentialType.DEFAULT,
             description="Azure credential type to use for authentication",
         ),
     ]

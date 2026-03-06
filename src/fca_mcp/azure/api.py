@@ -44,9 +44,17 @@ class AzureAPI:
                 raise ValueError("storage_account is required when credential is DEFAULT")
             credential = DefaultAzureCredential()
             # Construct endpoint URLs from account name or use provided endpoints
-            blob_url = self.settings.storage_blob_endpoint or f"https://{self.settings.storage_account}.blob.core.windows.net"
-            queue_url = self.settings.storage_queue_endpoint or f"https://{self.settings.storage_account}.queue.core.windows.net"
-            table_url = self.settings.storage_table_endpoint or f"https://{self.settings.storage_account}.table.core.windows.net"
+            blob_url = (
+                self.settings.storage_blob_endpoint or f"https://{self.settings.storage_account}.blob.core.windows.net"
+            )
+            queue_url = (
+                self.settings.storage_queue_endpoint
+                or f"https://{self.settings.storage_account}.queue.core.windows.net"
+            )
+            table_url = (
+                self.settings.storage_table_endpoint
+                or f"https://{self.settings.storage_account}.table.core.windows.net"
+            )
 
             self.queue_service_client = azure_queue_aio.QueueServiceClient(
                 account_url=queue_url,
