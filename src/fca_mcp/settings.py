@@ -5,10 +5,14 @@ from __future__ import annotations
 import base64
 import enum
 import functools
+import logging
+import os
 from typing import Annotated, Literal
 
 from pydantic import Field, HttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 
 @enum.unique
@@ -318,4 +322,11 @@ def get_settings() -> Settings:
     Returns:
         Settings: The global settings instance
     """
-    return Settings()
+    try:
+        return Settings()
+    except Exception as e:
+        logger.error(
+            "Failed to construct Settings. Environment variables:",
+            extra={"environ": dict(os.environ)},
+        )
+        raise

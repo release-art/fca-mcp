@@ -25,8 +25,9 @@ export AUTH0_STORAGE_ENCRYPTION_KEY="YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE
 
 export AZURITE_HOSTNAME="${AZURITE_HOSTNAME:-localhost}"
 export DEFAULT_AzureWebJobsStorage="DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://${AZURITE_HOSTNAME}:10000/devstoreaccount1;QueueEndpoint=http://${AZURITE_HOSTNAME}:10001/devstoreaccount1;TableEndpoint=http://${AZURITE_HOSTNAME}:10002/devstoreaccount1"
-export AZURE_STORAGE_CONNECTION_STRING="${AZURE_STORAGE_CONNECTION_STRING:-${DEFAULT_AzureWebJobsStorage}}"
-export AZURE_CREDENTIAL="${AZURE_CREDENTIAL:-none}"
+# export AZURE_STORAGE_CONNECTION_STRING="${AZURE_STORAGE_CONNECTION_STRING:-${DEFAULT_AzureWebJobsStorage}}"
+# export AZURE_CREDENTIAL="${AZURE_CREDENTIAL:-none}"
+# export AZURE_STORAGE_ACCOUNT="test"
 
 if [ -n "$*" ]; then
     ARGS=("$@")
