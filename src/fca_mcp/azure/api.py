@@ -6,6 +6,7 @@ import logging
 import azure.data.tables.aio as azure_tables_aio
 import azure.storage.blob.aio as azure_blob_aio
 import azure.storage.queue.aio as azure_queue_aio
+from azure.identity.aio import DefaultAzureCredential
 
 import fca_mcp
 
@@ -37,17 +38,18 @@ class AzureAPI:
                 conn_str=self.settings.storage_connection_string,
             )
         elif self.settings.credential == fca_mcp.settings.AzureCredentialType.DEFAULT:
+            credential = DefaultAzureCredential()
             self.queue_service_client = azure_queue_aio.QueueServiceClient.from_connection_string(
                 conn_str=self.settings.storage_connection_string,
-                credential=self.settings.credential,
+                credential=credential,
             )
             self.blob_service_client = azure_blob_aio.BlobServiceClient.from_connection_string(
                 conn_str=self.settings.storage_connection_string,
-                credential=self.settings.credential,
+                credential=credential,
             )
             self.table_service_client = azure_tables_aio.TableServiceClient.from_connection_string(
                 conn_str=self.settings.storage_connection_string,
-                credential=self.settings.credential,
+                credential=credential,
             )
         else:
             raise ValueError(f"Unsupported Azure credential type: {self.settings.credential}")
