@@ -1,4 +1,4 @@
-from  . import interactive
+from . import interactive
 
 
 def get_interactive_router():

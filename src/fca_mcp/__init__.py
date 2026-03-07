@@ -13,11 +13,11 @@ from . import (
     app,
     azure,
     cli,
+    http,
     logging as fca_logging,
     server,
     settings,
     uvcorn_app,
-    http,
 )
 
 logger = std_logging.getLogger(__name__)

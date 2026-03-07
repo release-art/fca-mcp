@@ -23,11 +23,15 @@ def _get_remote_auth_provider() -> AuthProvider:
     settings = fca_mcp.settings.get_settings()
     domain = settings.auth0.domain
 
+    # NOTE: required_scopes is intentionally omitted here. Scope enforcement
+    # is handled per-tool by AuthMiddleware + restrict_tag in server/__init__.py.
+    # Setting required_scopes on JWTVerifier would reject tokens globally
+    # (even for initialize/tools/list) before the middleware gets a chance to
+    # apply per-tool checks.
     jwt_verifier = JWTVerifier(
         jwks_uri=f"https://{domain}/.well-known/jwks.json",
         issuer=f"https://{domain}/",
         audience=settings.auth0.audience,
-        required_scopes=[scopes.FCA_API_RO],
     )
 
     return RemoteAuthProvider(
