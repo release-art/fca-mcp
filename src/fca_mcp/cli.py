@@ -43,7 +43,7 @@ def serve(host: str = "0.0.0.0", port: int = 8000, reload: bool = False) -> None
 
     # uvicorn.run manages its own event loop
     uvicorn.run(
-        "fca_mcp.uvcorn_app:get_fastapi_app",
+        "fca_mcp.uvcorn_app:get_http_app",
         host=host,
         port=port,
         log_config=fca_mcp.logging.get_config(),

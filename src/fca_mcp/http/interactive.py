@@ -9,15 +9,15 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-import fastapi
-from fastapi.responses import HTMLResponse
 from jinja2 import Environment, FileSystemLoader
+from starlette.requests import Request
+from starlette.responses import HTMLResponse
 
 import fca_mcp.settings
 
 logger = logging.getLogger(__name__)
 
-interactive_router = fastapi.APIRouter(prefix="/interactive", tags=["Interactive"])
+# interactive_router = fastapi.APIRouter(prefix="/interactive", tags=["Interactive"])
 
 # Set up Jinja2 environment
 _RESOURCES_DIR = Path(__file__).parent / "resources"
@@ -27,8 +27,8 @@ _jinja_env = Environment(
 )
 
 
-@interactive_router.get("/config")
-async def interactive_config() -> dict:
+# @interactive_router.get("/config")
+async def interactive_config(request: Request) -> dict:
     """Return Auth0 config for the SPA SDK (public, non-secret values only)."""
     settings = fca_mcp.settings.get_settings()
     return {
@@ -38,8 +38,8 @@ async def interactive_config() -> dict:
     }
 
 
-@interactive_router.get("/", response_class=HTMLResponse)
-async def interactive_ui(request: fastapi.Request) -> HTMLResponse:
+# @interactive_router.get("/", response_class=HTMLResponse)
+async def interactive_ui(request: Request) -> HTMLResponse:
     """Serve the interactive MCP tool explorer."""
     settings = fca_mcp.settings.get_settings()
     base_url = str(request.base_url).rstrip("/")

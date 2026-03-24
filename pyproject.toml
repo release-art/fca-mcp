@@ -27,7 +27,6 @@ license = "MPL-2.0"
 
 dependencies = [
     "pydantic>=2.12.5",
-    "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
     "typer>=0.21.2",
     "fca-api>=1.1.2",
