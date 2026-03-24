@@ -39,12 +39,6 @@ jobs:
           registry: ${{ vars.RELEASE_ART_CONTAINER_REGISTRY_HOST }}
           username: ${{ vars.RELEASE_ART_CONTAINER_REGISTRY_USER }}
           password: ${{ secrets.RELEASE_ART_CONTAINER_REGISTRY_TOKEN }}
-      - name: Build the test image
-        uses: docker/build-push-action@v6
-        with:
-          push: false
-          load: true
-          target: test
       - name: Build & push the image
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: docker/build-push-action@v6
