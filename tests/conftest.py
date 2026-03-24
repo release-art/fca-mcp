@@ -22,12 +22,9 @@ def test_settings() -> fca_mcp.settings.Settings:
             storage_connection_string="DefaultEndpointsProtocol=https;AccountName=testaccount;AccountKey=dGVzdGtleQ==;EndpointSuffix=core.windows.net",
         ),
         auth0=fca_mcp.settings.Auth0Settings(
+            mode="remote",
             domain="test.auth0.com",
             audience="https://test-api.example.com",
-            client_id="test_client_id_12345",
-            client_secret="test_client_secret_67890",
-            jwt_signing_key="test_jwt_signing_key",
-            storage_encryption_key="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
         ),
         fca_api=fca_mcp.settings.FcaApiSettings(
             username="test.user@example.com",

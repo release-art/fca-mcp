@@ -1,50 +1,46 @@
 from __future__ import annotations
 
 import logging
-from contextlib import asynccontextmanager
+import time
 from datetime import datetime
 
-import fastapi
-from fastapi.middleware.cors import CORSMiddleware as FastAPICORSMiddleware
-from fastmcp.utilities.lifespan import combine_lifespans
+from starlette.applications import Starlette
 from starlette.middleware import Middleware as StarletteMiddleware
 from starlette.middleware.cors import CORSMiddleware as StarletteCORSMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 import fca_mcp
 
 logger = logging.getLogger(__name__)
+START_T = time.monotonic()
 
-healthchecks = fastapi.APIRouter(prefix="/.container", tags=["Health"])
 
-
-@healthchecks.get("/health")
-async def health():
+async def health(request: Request) -> JSONResponse:
     """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "service": "FCA MCP Server",
-        "version": fca_mcp.__version__.__version__,
-        "timestamp": datetime.now().isoformat(),
-        "features": {"mcp_tools": True, "ai_analysis": True, "nl_interface": True},
-    }
+    return JSONResponse(
+        {
+            "status": "healthy",
+            "service": "FCA MCP Server",
+            "version": fca_mcp.__version__.__version__,
+            "timestamp": datetime.now().isoformat(),
+            "uptime_seconds": time.monotonic() - START_T,
+            "features": {"mcp_tools": True, "ai_analysis": True, "nl_interface": True},
+        }
+    )
 
 
-@asynccontextmanager
-async def http_lifespan(app: fastapi.FastAPI):
-    logger.debug("Starting up the HTTP app...")
-    yield
-    logger.debug("Shutting down the HTTP app...")
-
-
-MCP_PATH = "/mcp"
-
-
-def get_fastapi_app() -> fastapi.FastAPI:
+def get_http_app() -> Starlette:
     """Get the FastAPI application instance."""
+    settings = fca_mcp.settings.get_settings()
     logger.info("Creating FastAPI application...")
     mcp = fca_mcp.server.get_server()
+    mcp.custom_route("/.container/health", methods=["GET"], include_in_schema=False)(health)
+    if settings.auth0.interactive_client_id:
+        logger.info("Interactive client ID configured, including interactive UI routes")
+        fca_mcp.http.mount_interactive_router(mcp)
+
     mcp_app = mcp.http_app(
-        path=MCP_PATH,
         middleware=[
             StarletteMiddleware(
                 StarletteCORSMiddleware,
@@ -61,38 +57,4 @@ def get_fastapi_app() -> fastapi.FastAPI:
         ],
         stateless_http=True,
     )
-    app = fastapi.FastAPI(
-        title="FCA MCP Server API",
-        description="HTTP API for FCA regulatory data with AI analysis",
-        version=fca_mcp.version,
-        lifespan=combine_lifespans(
-            http_lifespan,
-            mcp_app.lifespan,
-        ),
-    )
-    app.my_app_ctx = fca_mcp.app.FcaMcpApp(
-        fastmcp_server=mcp,
-        fastmcp_http_app=mcp_app,
-    )
-    app.include_router(healthchecks)
-    if mcp.auth is not None:
-        logger.info("Auth provider is set, including auth routes")
-        well_known_router = fastapi.APIRouter(prefix="", tags=["Well-Known"])
-        for route in mcp.auth.get_well_known_routes(mcp_path=MCP_PATH):
-            logger.info(f"Adding well-known route: {route.path}")
-            well_known_router.add_api_route(
-                route.path,
-                route.endpoint,
-                methods=route.methods,
-                name=route.name,
-            )
-        app.include_router(well_known_router)
-    app.add_middleware(
-        FastAPICORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    app.mount("", mcp_app)
-    return app
+    return mcp_app

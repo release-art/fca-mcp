@@ -8,7 +8,7 @@ on:
       - completed
 
 env:
-  LATEST_TAG: "fca-mcp:latest"
+  IMAGE_NAME: "fca-mcp"
 
 jobs:
   start:
@@ -46,16 +46,11 @@ jobs:
           load: true
           target: test
       - name: Build & push the image
-        uses: docker/build-push-action@v6
-        with:
-          push: false
-          load: true
-          tags: "${{ env.LATEST_TAG }}"
-          target: release
-      - name: Push
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: docker/build-push-action@v6
         with:
           push: true
           tags: |
-            ${{ vars.RELEASE_ART_CONTAINER_REGISTRY_HOST }}/${{ env.LATEST_TAG }}
+            ${{ vars.RELEASE_ART_CONTAINER_REGISTRY_HOST }}/${{ env.IMAGE_NAME }}:latest
+            ${{ vars.RELEASE_ART_CONTAINER_REGISTRY_HOST }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          target: release

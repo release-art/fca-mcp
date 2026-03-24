@@ -10,9 +10,9 @@ import logging as std_logging
 
 from . import (
     __version__,
-    app,
     azure,
     cli,
+    http,
     logging as fca_logging,
     server,
     settings,
