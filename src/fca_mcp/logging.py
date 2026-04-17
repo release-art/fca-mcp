@@ -44,4 +44,5 @@ def get_config() -> dict:
 
 
 def configure():
+    """Apply the logging configuration to the root logger."""
     logging.config.dictConfig(get_config())

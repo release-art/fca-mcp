@@ -7,7 +7,7 @@ import enum
 import functools
 import logging
 import os
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal, Union
 
 from pydantic import Field, HttpUrl, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -88,21 +88,14 @@ class AzureSettings(BaseSettings):
     ]
 
 
-class Auth0Settings(BaseSettings):
-    """Auth0 OAuth configuration settings."""
+class _BaseAuth0Settings(BaseSettings):
+    """Common Auth0 settings shared by all auth modes."""
 
     model_config = SettingsConfigDict(
         env_prefix="AUTH0_",
-        extra="forbid",
+        extra="ignore",
     )
 
-    mode: Annotated[
-        AuthMode,
-        Field(
-            default=AuthMode.REMOTE,
-            description="Auth mode: 'remote' (JWT validation only) or 'proxy' (full OAuth proxy)",
-        ),
-    ]
     domain: Annotated[
         str,
         Field(
@@ -124,54 +117,51 @@ class Auth0Settings(BaseSettings):
             description="Auth0 SPA client ID for the interactive web UI",
         ),
     ]
+
+
+class RemoteAuth0Settings(_BaseAuth0Settings):
+    """Auth0 settings for remote/JWT-only verification mode."""
+
+    mode: Literal[AuthMode.REMOTE] = AuthMode.REMOTE
+
+
+class ProxyAuth0Settings(_BaseAuth0Settings):
+    """Auth0 settings for full OAuth proxy mode."""
+
+    mode: Literal[AuthMode.PROXY]
     client_id: Annotated[
-        str | None,
+        str,
         Field(
-            default=None,
-            description="Auth0 client ID (required for proxy mode)",
+            ...,
+            description="Auth0 client ID",
         ),
     ]
     client_secret: Annotated[
-        str | None,
+        str,
         Field(
-            default=None,
-            description="Auth0 client secret (required for proxy mode)",
+            ...,
+            description="Auth0 client secret",
         ),
     ]
     jwt_signing_key: Annotated[
-        str | None,
+        str,
         Field(
-            default=None,
-            description="JWT signing key for proxy mode token issuance (required for proxy mode)",
+            ...,
+            description="JWT signing key for proxy mode token issuance",
         ),
     ]
     storage_encryption_key: Annotated[
-        str | None,
+        str,
         Field(
-            default=None,
-            description="Encryption key for client token storage (required for proxy mode)",
+            ...,
+            description="Encryption key for client token storage",
         ),
     ]
 
-    @model_validator(mode="after")
-    def validate_proxy_fields(self) -> Auth0Settings:
-        """Ensure proxy-only fields are set when mode is 'proxy'."""
-        if self.mode == AuthMode.PROXY:
-            missing = [
-                f
-                for f in ("client_id", "client_secret", "jwt_signing_key", "storage_encryption_key")
-                if getattr(self, f) is None
-            ]
-            if missing:
-                raise ValueError(f"Auth0 proxy mode requires: {', '.join(missing)}")
-        return self
-
     @field_validator("storage_encryption_key")
     @classmethod
-    def validate_storage_encryption_key(cls, v: str | None) -> str | None:
+    def validate_storage_encryption_key(cls, v: str) -> str:
         """Validate that storage_encryption_key is 32 url-safe base64-encoded bytes."""
-        if v is None:
-            return v
         try:
             decoded = base64.urlsafe_b64decode(v)
             if len(decoded) != 32:
@@ -179,6 +169,12 @@ class Auth0Settings(BaseSettings):
         except Exception as e:
             raise ValueError(f"must be 32 url-safe base64-encoded bytes: {e}") from e
         return v
+
+
+Auth0Settings = Annotated[
+    Union[RemoteAuth0Settings, ProxyAuth0Settings],
+    Field(discriminator="mode"),
+]
 
 
 class FcaApiSettings(BaseSettings):
@@ -326,8 +322,16 @@ class Settings(BaseSettings):
 
     # Nested settings
     azure: Annotated[AzureSettings, Field(default_factory=AzureSettings)]
-    auth0: Annotated[Auth0Settings, Field(default_factory=Auth0Settings)]
+    auth0: Auth0Settings
     fca_api: Annotated[FcaApiSettings, Field(default_factory=FcaApiSettings)]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _build_auth0(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "auth0" not in data:
+            mode = os.environ.get("AUTH0_MODE", AuthMode.REMOTE)
+            data["auth0"] = ProxyAuth0Settings() if mode == AuthMode.PROXY else RemoteAuth0Settings()
+        return data
     server: Annotated[ServerSettings, Field(default_factory=ServerSettings)]
     logging: Annotated[LoggingSettings, Field(default_factory=LoggingSettings)]
 
@@ -349,7 +353,7 @@ class Settings(BaseSettings):
 
     def get_base_url(self) -> str:
         """Get the full base URL for the application."""
-        return str(self.server.base_url)
+        return str(self.server.base_url).rstrip("/")
 
 
 @functools.lru_cache

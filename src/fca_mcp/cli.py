@@ -1,8 +1,11 @@
-"""
-FCA MCP Server with AI Analysis - Complete Production System.
+"""Typer CLI entry point for the FCA MCP server.
 
-This is the unified server combining MCP protocol, AI analysis, and LLM integration.
-Run this single file to access all FCA regulatory data analysis features.
+Exposes two commands:
+
+- ``serve``: run the HTTP transport under uvicorn.
+- ``stdio``: run the stdio transport for local MCP clients.
+
+Invoked as ``python -m fca_mcp <command>``.
 """
 
 from __future__ import annotations
@@ -28,20 +31,13 @@ def startup(ctx: typer.Context):
 
 @app.command()
 def serve(host: str = "0.0.0.0", port: int = 8000, reload: bool = False) -> None:
-    """Run HTTP server mode (synchronous entry point)."""
+    """Run the HTTP transport under uvicorn."""
     logger.info("[HTTP] Starting server on %s:%s", host, port)
     logger.info(
         "[HTTP] Web UI: http://%s:%s",
         host,
         port,
     )
-    logger.info(
-        "[HTTP] API Docs: http://%s:%s/docs",
-        host,
-        port,
-    )
-
-    # uvicorn.run manages its own event loop
     uvicorn.run(
         "fca_mcp.uvcorn_app:get_http_app",
         host=host,
@@ -54,7 +50,7 @@ def serve(host: str = "0.0.0.0", port: int = 8000, reload: bool = False) -> None
 
 @app.command()
 def stdio() -> None:
-    """Run stdio mode (asynchronous entry point)."""
+    """Run the stdio transport for local MCP clients."""
     mcp = fca_mcp.server.get_server()
     mcp.run()
 

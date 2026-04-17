@@ -49,7 +49,7 @@ async def interactive_ui(request: Request) -> HTMLResponse:
         domain=settings.auth0.domain,
         audience=settings.auth0.audience,
         client_id=settings.auth0.interactive_client_id or "",
-        mcp_url=f"{base_url}/mcp",
+        mcp_url=f"{base_url}",
     )
 
     return HTMLResponse(content=content)

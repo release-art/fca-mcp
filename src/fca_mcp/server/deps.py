@@ -16,6 +16,7 @@ _current_context = CurrentContext()
 
 
 def get_fca_app(ctx: fastmcp.Context = _current_context) -> app.FcaApp:
+    """Pull the ``FcaApp`` container out of the current lifespan context."""
     return ctx.lifespan_context["fca_app"]
 
 
@@ -23,6 +24,7 @@ _fca_app_dep = Depends(get_fca_app)
 
 
 def get_fca_api(fca_app=_fca_app_dep) -> fca_api.async_api.Client:
+    """Yield the shared ``fca_api`` async client for a tool invocation."""
     return fca_app.fca_api
 
 

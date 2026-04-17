@@ -21,7 +21,8 @@ def _get_remote_auth_provider() -> AuthProvider:
     from pydantic import AnyHttpUrl
 
     settings = fca_mcp.settings.get_settings()
-    domain = settings.auth0.domain
+    auth0 = settings.auth0
+    domain = auth0.domain
 
     # NOTE: required_scopes is intentionally omitted here. Scope enforcement
     # is handled per-tool by AuthMiddleware + restrict_tag in server/__init__.py.
@@ -31,7 +32,7 @@ def _get_remote_auth_provider() -> AuthProvider:
     jwt_verifier = JWTVerifier(
         jwks_uri=f"https://{domain}/.well-known/jwks.json",
         issuer=f"https://{domain}/",
-        audience=settings.auth0.audience,
+        audience=auth0.audience,
     )
 
     return RemoteAuthProvider(
@@ -43,7 +44,7 @@ def _get_remote_auth_provider() -> AuthProvider:
     )
 
 
-def _get_proxy_auth_provider() -> AuthProvider:
+def _get_proxy_auth_provider(auth0: fca_mcp.settings.ProxyAuth0Settings) -> AuthProvider:
     """Create an Auth0Provider (OIDCProxy) for full OAuth proxy mode."""
     from cryptography.fernet import Fernet
     from fastmcp.server.auth.providers.auth0 import Auth0Provider
@@ -56,18 +57,13 @@ def _get_proxy_auth_provider() -> AuthProvider:
     settings = fca_mcp.settings.get_settings()
     tmp_api = fca_mcp.azure.api.AzureAPI(settings.azure)
 
-    assert settings.auth0.client_id is not None
-    assert settings.auth0.client_secret is not None
-    assert settings.auth0.jwt_signing_key is not None
-    assert settings.auth0.storage_encryption_key is not None
-
     return Auth0Provider(
-        audience=settings.auth0.audience,
-        client_id=settings.auth0.client_id,
-        client_secret=settings.auth0.client_secret,
-        jwt_signing_key=settings.auth0.jwt_signing_key,
+        audience=auth0.audience,
+        client_id=auth0.client_id,
+        client_secret=auth0.client_secret,
+        jwt_signing_key=auth0.jwt_signing_key,
         base_url=settings.get_base_url(),
-        config_url=f"https://{settings.auth0.domain}/.well-known/openid-configuration",
+        config_url=f"https://{auth0.domain}/.well-known/openid-configuration",
         required_scopes=[scopes.FCA_API_RO],
         client_storage=FernetEncryptionWrapper(
             key_value=fca_mcp.azure.blob_key_value.AzureBlobStore(
@@ -75,7 +71,7 @@ def _get_proxy_auth_provider() -> AuthProvider:
                 container_name=fca_mcp.azure.storage_container_names.AUTH_CLIENT_STORE,
                 default_collection="auth0_clients",
             ),
-            fernet=Fernet(settings.auth0.storage_encryption_key),
+            fernet=Fernet(auth0.storage_encryption_key),
         ),
     )
 
@@ -84,9 +80,9 @@ def get_auth_provider() -> AuthProvider:
     """Get the authentication provider based on configured auth mode."""
     settings = fca_mcp.settings.get_settings()
 
-    if settings.auth0.mode == fca_mcp.settings.AuthMode.REMOTE:
+    if isinstance(settings.auth0, fca_mcp.settings.RemoteAuth0Settings):
         logger.info("Using RemoteAuthProvider (JWT verification only)")
         return _get_remote_auth_provider()
 
     logger.info("Using Auth0Provider (OAuth proxy mode)")
-    return _get_proxy_auth_provider()
+    return _get_proxy_auth_provider(settings.auth0)

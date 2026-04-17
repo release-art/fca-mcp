@@ -24,6 +24,11 @@ from . import app, auth, deps, firms, funds, individuals, markets, search, types
 
 @lifespan
 async def mcp_lifespan(mcp_app: fastmcp.FastMCP):
+    """Open a single ``fca_api`` client for the server's lifetime.
+
+    The client is exposed to tools via ``deps.FcaApiDep`` and closed on
+    shutdown via the async-context-manager protocol.
+    """
     settings = fca_mcp.settings.get_settings()
     client = fca_api.async_api.Client((settings.fca_api.username, settings.fca_api.key))
     logger.info(f"Server {mcp_app} initialized successfully")
@@ -33,6 +38,12 @@ async def mcp_lifespan(mcp_app: fastmcp.FastMCP):
 
 
 def get_server() -> fastmcp.FastMCP:
+    """Build the composed FastMCP server.
+
+    Mounts the five sub-servers (search, firms, funds, individuals,
+    markets), wires up the middleware stack, and installs the configured
+    auth provider.
+    """
     main = fastmcp.FastMCP(
         "Release.art public MCP",
         lifespan=mcp_lifespan,

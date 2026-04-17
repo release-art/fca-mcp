@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Is
 
-An MCP (Model Context Protocol) server exposing the UK FCA Financial Services Register via 25 read-only tools. Built on FastMCP v3, served over HTTP (FastAPI/uvicorn) or stdio. Uses Auth0 for OAuth2 and Azure Blob Storage for client token persistence.
+An MCP (Model Context Protocol) server exposing the UK FCA Financial Services Register via 25 read-only tools. Built on FastMCP v3, served over HTTP (Starlette/uvicorn) or stdio. Uses Auth0 for OAuth2; in `proxy` mode, client registrations are persisted in Azure Blob Storage (Fernet-encrypted).
 
 ## Commands
 
@@ -47,7 +47,7 @@ docker-compose up --build
 `get_server()` in `src/fca_mcp/server/__init__.py` builds the main FastMCP instance and mounts five sub-servers, each owning a group of tools:
 
 - `search.py` — 3 tools: `search_frn`, `search_irn`, `search_prn`
-- `firms.py` — 15 tools: `get_firm`, `get_firm_names`, `get_firm_addresses`, etc.
+- `firms.py` — 15 tools: `get_firm`, `get_firm_names`, `get_firm_adresses` (sic — typo preserved in the current API), etc.
 - `funds.py` — 3 tools: `get_fund`, `get_fund_names`, `get_fund_subfunds`
 - `individuals.py` — 3 tools: `get_individual`, `get_individual_controlled_functions`, `get_individual_disciplinary_history`
 - `markets.py` — 1 tool: `get_regulated_markets`
@@ -75,9 +75,13 @@ Two distinct concepts — note the underscore vs hyphen difference:
 - **Scope** (`auth/scopes.py`): `FCA_API_RO = "fca-api:read"` — the OAuth2 scope in tokens
 - **Tag** (`auth/tags.py`): `FCA_API_RO = "fca_api:read"` — the tag on tool decorators
 
-`AuthMiddleware` uses `restrict_tag()`: tools tagged with `FCA_API_RO` require the matching scope in the access token. Untagged tools are allowed through without scope checks. The middleware skips auth entirely for stdio transport.
+`AuthMiddleware` uses `restrict_tag()`: tools tagged with `FCA_API_RO` require the matching scope in the access token. Untagged tools (e.g., `initialize`, `tools/list`) are allowed through without scope checks. The middleware skips auth entirely for stdio transport.
 
-Auth provider (`auth/provider.py`) creates an `Auth0Provider` with client storage backed by `AzureBlobStore` + Fernet encryption.
+Auth provider (`auth/provider.py`) has two modes selected by `AUTH0_MODE`:
+- `remote` (default): `RemoteAuthProvider` + `JWTVerifier` — validates tokens issued by an upstream Auth0 tenant. No client storage.
+- `proxy`: `Auth0Provider` — full OAuth proxy with dynamic client registration. Clients are persisted in `AzureBlobStore` wrapped in `FernetEncryptionWrapper` (key: `AUTH0_STORAGE_ENCRYPTION_KEY`).
+
+Note: `JWTVerifier` is intentionally constructed without `required_scopes`. Global scope enforcement would reject `initialize`/`tools/list`; scope checks live in `AuthMiddleware` + `restrict_tag` instead.
 
 ### Middleware Stack (execution order)
 
@@ -91,7 +95,7 @@ Auth provider (`auth/provider.py`) creates an `Auth0Provider` with client storag
 Tests use FastMCP's in-memory transport (`FastMCPTransport`) — no HTTP server needed. Key fixtures in `tests/server/conftest.py`:
 
 - `mock_fca_api` (autouse): Patches `fca_api.async_api.Client` with a caching mock that records/replays real API responses
-- `mock_auth_components` (autouse): Replaces `Auth0Provider` with `DebugTokenVerifier` and injects a synthetic `AccessToken` so auth middleware works without Azure/Auth0
+- `mock_auth_components` (autouse): Replaces the configured auth provider (`RemoteAuthProvider` or `Auth0Provider`) with `DebugTokenVerifier` and injects a synthetic `AccessToken` so auth middleware works without live Azure/Auth0
 - `oauth_scopes`: Override per-test to control granted scopes (default: `["fca-api:read"]`)
 - `mcp_app` → `mcp_client`: Creates server and async client
 

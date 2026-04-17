@@ -1,222 +1,131 @@
-# Settings System Documentation
+# Settings Reference
 
-## Overview
+Configuration for the FCA MCP server, built on [Pydantic v2](https://docs.pydantic.dev/) and [pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/). All values are loaded from environment variables (or a `.env` file); extra variables are rejected (`extra="forbid"`).
 
-The FCA MCP project uses a well-designed, type-safe settings system built on **Pydantic v2** and **pydantic-settings**. All configuration is loaded from environment variables, with sensible defaults and comprehensive validation.
+Source of truth: [`src/fca_mcp/settings.py`](src/fca_mcp/settings.py).
 
-## Quick Start
-
-### 1. Configure Environment Variables
-
-Copy the example environment file and fill in your values:
+## Quick start
 
 ```bash
 cp .env.example .env
+# edit .env with your values
 ```
-
-Edit `.env` with your actual credentials:
-
-```bash
-# Required settings
-AUTH0_DOMAIN=your-tenant.auth0.com
-AUTH0_AUDIENCE=https://your-api-audience
-AUTH0_STORAGE_ENCRYPTION_KEY=your-32-byte-base64-encoded-encryption-key
-FCA_API_USERNAME=your-email@example.com
-FCA_API_KEY=your-fca-api-key
-
-# Azure Storage (choose one credential type)
-# For local development with Azurite:
-AZURE_CREDENTIAL=none
-AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=...;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
-
-# OR for production with DefaultAzureCredential:
-# AZURE_CREDENTIAL=default
-# AZURE_STORAGE_ACCOUNT=mycompanystorage
-
-# Optional: Redis is enabled by default at localhost:6379
-REDIS_URL=redis://localhost:6379/0
-REDIS_ENABLED=true
-
-# Optional: Server configuration
-SERVER_HOST=0.0.0.0
-SERVER_PORT=8000
-SERVER_HOSTNAME=localhost
-```
-
-### 2. Use Settings in Code
 
 ```python
 from fca_mcp.settings import get_settings
 
-# Get the global settings instance (cached)
-settings = get_settings()
-
-# Access nested settings
-print(settings.auth0.domain)
-print(settings.fca_api.username)
-print(settings.redis.url)
-print(settings.server.port)
-
-# Get the full base URL
-base_url = settings.get_base_url()
+settings = get_settings()          # cached singleton via @functools.lru_cache
+settings.auth0.domain
+settings.fca_api.username
+settings.server.base_url
 ```
 
-## Settings Structure
+`get_settings()` raises a `pydantic.ValidationError` on startup if any required variable is missing or malformed.
 
-### Top-Level Settings
+## Top-level `Settings`
 
-| Setting | Type | Default | Description |
+| Field | Env var | Type | Default | Notes |
+|-------|---------|------|---------|-------|
+| `environment` | `ENVIRONMENT` | `development` \| `staging` \| `production` | `development` | |
+| `debug` | `DEBUG` | `bool` | `False` | |
+| `cors_origins` | `CORS_ORIGINS` | `list[str]` | `["*"]` | |
+| `api_version` | `API_VERSION` | `str` | `"v1"` | |
+| `azure` | `AZURE_*` | `AzureSettings` | (factory) | |
+| `auth0` | `AUTH0_*` | `RemoteAuth0Settings` \| `ProxyAuth0Settings` | mode selected via `AUTH0_MODE` | |
+| `fca_api` | `FCA_API_*` | `FcaApiSettings` | (factory) | |
+| `server` | `SERVER_*` | `ServerSettings` | (factory) | |
+| `logging` | `LOG_*` | `LoggingSettings` | (factory) | |
+
+## `auth0` — Auth0 settings
+
+The `auth0` block is a tagged union discriminated by `mode`. Choose the mode by setting `AUTH0_MODE`:
+
+- `remote` (default) — the MCP server only **verifies** access tokens issued by an upstream Auth0 tenant. No client registration, no token storage.
+- `proxy` — the MCP server runs a full OAuth proxy via `fastmcp`'s `Auth0Provider`, persists client registrations in Azure Blob Storage (Fernet-encrypted), and issues its own tokens signed with `AUTH0_JWT_SIGNING_KEY`.
+
+### Shared (both modes)
+
+| Env var | Required | Description |
+|---------|----------|-------------|
+| `AUTH0_MODE` | No (default `remote`) | `remote` or `proxy`. |
+| `AUTH0_DOMAIN` | Yes | e.g. `tenant.auth0.com`. |
+| `AUTH0_AUDIENCE` | Yes | API identifier configured in Auth0. |
+| `AUTH0_INTERACTIVE_CLIENT_ID` | No | SPA client ID that enables the `/interactive` web UI. When unset, interactive routes are not mounted. |
+
+### Proxy mode only
+
+| Env var | Required | Description |
+|---------|----------|-------------|
+| `AUTH0_CLIENT_ID` | Yes | Auth0 application client ID. |
+| `AUTH0_CLIENT_SECRET` | Yes | Auth0 application client secret. |
+| `AUTH0_JWT_SIGNING_KEY` | Yes | Key used to sign tokens issued by the proxy. |
+| `AUTH0_STORAGE_ENCRYPTION_KEY` | Yes | 32 bytes, url-safe base64 encoded. Fernet key used to encrypt client records in Azure Blob. |
+
+`AUTH0_STORAGE_ENCRYPTION_KEY` is validated on startup: it must base64-decode to exactly 32 bytes.
+
+## `azure` — Azure storage (used in proxy mode)
+
+| Env var | Type | Default | Description |
 |---------|------|---------|-------------|
-| `environment` | `Literal["development", "staging", "production"]` | `"development"` | Application environment |
-| `debug` | `bool` | `False` | Enable debug mode |
-| `cors_origins` | `list[str]` | `["*"]` | Allowed CORS origins |
-| `api_version` | `str` | `"v1"` | API version prefix |
+| `AZURE_CREDENTIAL` | `none` \| `default` | `default` | `none` uses a connection string (Azurite/dev); `default` uses `DefaultAzureCredential` (managed identity, Azure CLI, etc.). |
+| `AZURE_STORAGE_CONNECTION_STRING` | `str` | — | Required when `AZURE_CREDENTIAL=none`. |
+| `AZURE_STORAGE_ACCOUNT` | `str` | — | Required when `AZURE_CREDENTIAL=default`. |
+| `AZURE_STORAGE_BLOB_ENDPOINT` | `str` | `https://{account}.blob.core.windows.net` | Optional override. |
+| `AZURE_STORAGE_QUEUE_ENDPOINT` | `str` | `https://{account}.queue.core.windows.net` | Optional override. |
+| `AZURE_STORAGE_TABLE_ENDPOINT` | `str` | `https://{account}.table.core.windows.net` | Optional override. |
 
-### Auth0Settings (`settings.auth0`)
-
-OAuth authentication configuration for Auth0.
-
-| Setting | Type | Required | Description |
-|---------|------|----------|-------------|
-| `domain` | `str` | Yes | Auth0 domain (e.g., 'tenant.auth0.com') |
-| `audience` | `str` | Yes | Auth0 API audience identifier |
-| `client_id` | `str` | No | Client ID for client credentials flow |
-| `client_secret` | `str` | No | Client secret for client credentials flow |
-
-**Environment Variables:**
-- `AUTH0_DOMAIN`
-- `AUTH0_AUDIENCE`
-- `AUTH0_CLIENT_ID` (optional)
-- `AUTH0_CLIENT_SECRET` (optional)
-
-### RedisSettings (`settings.redis`)
-
-Redis connection and caching configuration.
-
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `url` | `RedisDsn` | `redis://localhost:6379/0` | Redis connection URL |
-| `password` | `str` | `None` | Redis password |
-| `db` | `int` | `0` | Redis database number (0-15) |
-| `max_connections` | `int` | `10` | Maximum pool connections |
-| `socket_timeout` | `float` | `5.0` | Socket timeout (seconds) |
-| `socket_connect_timeout` | `float` | `5.0` | Connection timeout (seconds) |
-| `cache_ttl` | `int` | `3600` | Default cache TTL (seconds, 0=no expiration) |
-| `enabled` | `bool` | `True` | Enable Redis caching |
-
-**Environment Variables:**
-- `REDIS_URL`
-- `REDIS_PASSWORD`
-- `REDIS_DB`
-- `REDIS_MAX_CONNECTIONS`
-- `REDIS_SOCKET_TIMEOUT`
-- `REDIS_SOCKET_CONNECT_TIMEOUT`
-- `REDIS_CACHE_TTL`
-- `REDIS_ENABLED`
-
-### FcaApiSettings (`settings.fca_api`)
-
-FCA API credentials and configuration.
-
-| Setting | Type | Required | Description |
-|---------|------|----------|-------------|
-| `username` | `str` | Yes | FCA API username/email |
-| `key` | `str` | Yes | FCA API key |
-| `base_url` | `HttpUrl` | `None` | FCA API base URL (optional override) |
-| `timeout` | `float` | `30.0` | API request timeout (seconds) |
-| `max_retries` | `int` | `3` | Maximum retries for failed requests |
-
-**Environment Variables:**
-- `FCA_API_USERNAME`
-- `FCA_API_KEY`
-- `FCA_API_BASE_URL` (optional)
-- `FCA_API_TIMEOUT`
-- `FCA_API_MAX_RETRIES`
-
-### AzureSettings (`settings.azure`)
-
-Azure Storage configuration for client token persistence and state management.
-
-| Setting | Type | Required | Description |
-|---------|------|----------|-------------|
-| `credential` | `Literal["none", "default"]` | Yes | Azure credential type: "none" for connection string (Azurite/dev), "default" for DefaultAzureCredential (production) |
-| `storage_connection_string` | `str` | When credential="none" | Azure Storage connection string (for local dev with Azurite) |
-| `storage_account` | `str` | When credential="default" | Azure Storage account name (used with DefaultAzureCredential) |
-| `storage_blob_endpoint` | `str` | No | Custom blob endpoint (defaults to https://{account}.blob.core.windows.net) |
-| `storage_queue_endpoint` | `str` | No | Custom queue endpoint (defaults to https://{account}.queue.core.windows.net) |
-| `storage_table_endpoint` | `str` | No | Custom table endpoint (defaults to https://{account}.table.core.windows.net) |
-
-**Environment Variables:**
-- `AZURE_CREDENTIAL` - Required: "none" or "default"
-- `AZURE_STORAGE_CONNECTION_STRING` - Required when credential="none"
-- `AZURE_STORAGE_ACCOUNT` - Required when credential="default"
-- `AZURE_STORAGE_BLOB_ENDPOINT` (optional)
-- `AZURE_STORAGE_QUEUE_ENDPOINT` (optional)
-- `AZURE_STORAGE_TABLE_ENDPOINT` (optional)
-
-**Examples:**
+Only the blob endpoint is used today (for OAuth client storage); the queue/table endpoints exist for future extension.
 
 Local development with Azurite:
+
 ```bash
 AZURE_CREDENTIAL=none
 AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=...;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
 ```
 
-Production with DefaultAzureCredential:
+Production with managed identity:
+
 ```bash
 AZURE_CREDENTIAL=default
 AZURE_STORAGE_ACCOUNT=mycompanystorage
-# DefaultAzureCredential will use managed identity, Azure CLI, or other ambient credentials
 ```
 
-### ServerSettings (`settings.server`)
+## `fca_api` — FCA Register credentials
 
-Server and host configuration.
-
-| Setting | Type | Default | Description |
+| Env var | Type | Default | Description |
 |---------|------|---------|-------------|
-| `host` | `str` | `"0.0.0.0"` | Server host address |
-| `port` | `int` | `8000` | Server port number |
-| `hostname` | `str` | `"localhost"` | Public hostname for URL generation |
-| `base_url` | `HttpUrl` | `None` | Full base URL (auto-generated if not set) |
-| `reload` | `bool` | `False` | Enable auto-reload (development) |
-| `workers` | `int` | `1` | Number of worker processes |
+| `FCA_API_USERNAME` | `str` | — (required) | FCA Register email. |
+| `FCA_API_KEY` | `str` | — (required) | FCA Register API key. |
+| `FCA_API_BASE_URL` | `HttpUrl` | unset | Optional override. |
+| `FCA_API_TIMEOUT` | `float > 0` | `30.0` | Request timeout, seconds. |
+| `FCA_API_MAX_RETRIES` | `int >= 0` | `3` | Retry count for transient failures. |
 
-**Environment Variables:**
-- `SERVER_HOST`
-- `SERVER_PORT`
-- `SERVER_HOSTNAME`
-- `SERVER_BASE_URL` (optional)
-- `SERVER_RELOAD`
-- `SERVER_WORKERS`
+## `server` — HTTP server
 
-### LoggingSettings (`settings.logging`)
-
-Logging configuration.
-
-| Setting | Type | Default | Description |
+| Env var | Type | Default | Description |
 |---------|------|---------|-------------|
-| `level` | `Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]` | `"INFO"` | Logging level |
-| `format` | `Literal["json", "text"]` | `"text"` | Log output format |
-| `file` | `str` | `None` | Log file path (None = stdout only) |
+| `SERVER_HOST` | `str` | `0.0.0.0` | Bind address. |
+| `SERVER_PORT` | `int` (1–65535) | `8000` | Bind port. |
+| `SERVER_BASE_URL` | `HttpUrl` | — (required) | Public base URL exposed in OAuth resource metadata. |
+| `SERVER_WORKERS` | `int >= 1` | `1` | Uvicorn worker count. |
 
-**Environment Variables:**
-- `LOG_LEVEL`
-- `LOG_FORMAT`
-- `LOG_FILE` (optional)
+`SERVER_BASE_URL` is required because `RemoteAuthProvider` / `Auth0Provider` include it in the OAuth protected resource metadata. Use `http://localhost:8000` locally.
 
-## Usage Examples
+The `--reload` flag on `python -m fca_mcp serve` is passed through to uvicorn directly and is independent of this settings block.
 
-### Getting Settings Instance
+## `logging`
 
-```python
-from fca_mcp.settings import get_settings
+| Env var | Type | Default | Description |
+|---------|------|---------|-------------|
+| `LOG_LEVEL` | `DEBUG`\|`INFO`\|`WARNING`\|`ERROR`\|`CRITICAL` | `INFO` | |
+| `LOG_FORMAT` | `text` \| `json` | `text` | |
+| `LOG_FILE` | `str` | unset | When set, log to file in addition to stdout. |
 
-# The settings instance is cached via @lru_cache
-settings = get_settings()
-```
+Runtime logging config is assembled by [`fca_mcp.logging.get_config()`](src/fca_mcp/logging.py).
 
-### FastAPI Dependency Injection
+## Usage patterns
+
+### FastAPI / FastMCP dependency injection
 
 ```python
 from typing import Annotated
@@ -225,138 +134,57 @@ from fca_mcp.settings import Settings, get_settings
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
-@app.get("/config")
-async def get_config(settings: SettingsDep):
-    return {
-        "environment": settings.environment,
-        "api_version": settings.api_version,
-    }
+async def handler(settings: SettingsDep):
+    return {"env": settings.environment}
 ```
 
-### Redis Client Configuration
+### Resolving the public base URL
 
 ```python
-import redis
-from fca_mcp.settings import get_settings
-
 settings = get_settings()
-
-if settings.redis.enabled:
-    client = redis.from_url(
-        str(settings.redis.url),
-        password=settings.redis.password,
-        db=settings.redis.db,
-        max_connections=settings.redis.max_connections,
-        socket_timeout=settings.redis.socket_timeout,
-    )
+base_url = settings.get_base_url()   # str(settings.server.base_url).rstrip("/")
 ```
 
-### Environment-Specific Behavior
+### Environment-specific branches
 
 ```python
-from fca_mcp.settings import get_settings
-
-settings = get_settings()
-
 if settings.environment == "production":
-    # Production configuration
-    enable_metrics()
-    setup_monitoring()
-elif settings.environment == "development":
-    # Development configuration
-    if settings.debug:
-        enable_debug_toolbar()
+    ...
+elif settings.debug:
+    ...
 ```
-
-### Generating URLs
-
-```python
-from fca_mcp.settings import get_settings
-
-settings = get_settings()
-
-# Get full base URL
-base_url = settings.get_base_url()
-# Returns: "http://localhost:8000" (development)
-#      or: "https://api.example.com" (production with SERVER_BASE_URL set)
-
-# Generate API endpoints
-api_endpoint = f"{base_url}/api/{settings.api_version}/firms"
-```
-
-## Type Safety
-
-All settings are fully typed using Pydantic v2, providing:
-
-- **Automatic validation** at startup
-- **Type checking** with mypy/pyright
-- **IDE autocomplete** for all settings
-- **Runtime validation** for all values
-
-## Environment Variable Loading
-
-Settings are loaded in the following order (later overrides earlier):
-
-1. Default values defined in the settings classes
-2. Environment variables from the system
-3. Values from `.env` file (if present)
-
-## Best Practices
-
-1. **Always use `get_settings()`** - Don't instantiate `Settings()` directly
-2. **Use type hints** - Leverage `Settings` type for better IDE support
-3. **Validate early** - Call `get_settings()` at application startup to catch configuration errors
-4. **Never commit `.env`** - Keep credentials in `.env` (gitignored), use `.env.example` for documentation
-5. **Use environment-specific settings** - Check `settings.environment` for env-specific behavior
 
 ## Troubleshooting
 
-### Missing Required Settings
-
-If you see a ValidationError at startup:
+### Missing required variable
 
 ```
-pydantic.ValidationError: 2 validation errors for Auth0Settings
-domain
-  Field required [type=missing, input_value={}, input_type=dict]
+pydantic.ValidationError: 1 validation error for Settings
+server.base_url
+  Field required
 ```
 
-This means a required environment variable is not set. Check `.env.example` for required variables.
+Set the variable named in the error (here `SERVER_BASE_URL`) and restart.
 
-### Type Validation Errors
-
-If you see a ValidationError for type mismatch:
+### Bad `AUTH0_STORAGE_ENCRYPTION_KEY`
 
 ```
-pydantic.ValidationError: 1 validation error for ServerSettings
-port
-  Input should be a valid integer [type=int_type, input_value='abc', input_type=str]
+ValueError: must be 32 url-safe base64-encoded bytes
 ```
 
-Check that your environment variables have the correct format (e.g., `SERVER_PORT` should be a number).
+Generate one with:
 
-## Migration from Direct `os.environ`
-
-**Before:**
 ```python
-import os
-
-domain = os.environ["AUTH0_DOMAIN"]
-username = os.environ["FCA_API_USERNAME"]
+from cryptography.fernet import Fernet
+print(Fernet.generate_key().decode())
 ```
 
-**After:**
-```python
-from fca_mcp.settings import get_settings
+### Unexpected variable rejected
 
-settings = get_settings()
-domain = settings.auth0.domain
-username = settings.fca_api.username
-```
+`extra="forbid"` means unknown variables under a prefix fail validation. Remove the stray variable, or move it to its correct prefix.
 
-Benefits:
-- Type safety and validation
-- Better organization (namespaced)
-- Centralized configuration
-- Default values and documentation
-- No KeyError exceptions
+## Best practices
+
+- Always go through `get_settings()`. Don't instantiate `Settings()` directly — you lose the cache and skip validation aggregation.
+- Never commit `.env`. Use `.env.example` as the template.
+- Call `get_settings()` at startup (the lifespan already does) so configuration errors surface immediately.

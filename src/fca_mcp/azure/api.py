@@ -1,4 +1,4 @@
-"""Top-level Azure API interface for Flow Shelf."""
+"""Factory for Azure Storage clients (blob, queue, table) driven by ``AzureSettings``."""
 
 import contextlib
 import logging
@@ -16,7 +16,13 @@ logger = logging.getLogger(__name__)
 
 
 class AzureAPI:
-    """Azure API interface for Flow Shelf."""
+    """Holds blob/queue/table service clients built from ``AzureSettings``.
+
+    With ``credential="none"`` (e.g. Azurite), every client is built from
+    ``storage_connection_string``. With ``credential="default"``, endpoints
+    are derived from ``storage_account`` (or the explicit ``*_endpoint``
+    overrides) and authenticated via ``DefaultAzureCredential``.
+    """
 
     settings: app_settings_module.AzureSettings
     queue_service_client: azure_queue_aio.QueueServiceClient

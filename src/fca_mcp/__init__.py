@@ -1,10 +1,11 @@
-from __future__ import annotations
+"""MCP server for the UK FCA Financial Services Register.
 
-"""MCP server for FCA Financial Services Register API.
-
-This package provides a Model Context Protocol (MCP) server that exposes
-the FCA Register API to LLM clients through structured tools.
+A FastMCP server exposing the FCA Register via 25 read-only tools over HTTP
+or stdio. See ``server.get_server()`` for the composed server and
+``cli`` for the command-line entry point.
 """
+
+from __future__ import annotations
 
 import logging as std_logging
 

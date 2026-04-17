@@ -25,7 +25,6 @@ async def health(request: Request) -> JSONResponse:
             "version": fca_mcp.__version__.__version__,
             "timestamp": datetime.now().isoformat(),
             "uptime_seconds": time.monotonic() - START_T,
-            "features": {"mcp_tools": True, "ai_analysis": True, "nl_interface": True},
         }
     )
 
@@ -41,6 +40,7 @@ def get_http_app() -> Starlette:
         fca_mcp.http.mount_interactive_router(mcp)
 
     mcp_app = mcp.http_app(
+        path="/",
         middleware=[
             StarletteMiddleware(
                 StarletteCORSMiddleware,
