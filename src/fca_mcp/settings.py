@@ -88,6 +88,27 @@ class AzureSettings(BaseSettings):
     ]
 
 
+class BlobStoreNamesSettings(BaseSettings):
+    """Names of Azure Blob Storage containers used by the application.
+
+    Each field maps to the container name for a specific internal store,
+    configurable via the ``BLOB_STORE_NAME_*`` environment variables.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="BLOB_STORE_NAME_",
+        extra="forbid",
+    )
+
+    auth0_clients: Annotated[
+        str,
+        Field(
+            default="auth0-clients",
+            description="Container name for the Auth0 OAuth client registration store (proxy mode).",
+        ),
+    ]
+
+
 class _BaseAuth0Settings(BaseSettings):
     """Common Auth0 settings shared by all auth modes."""
 
@@ -322,6 +343,7 @@ class Settings(BaseSettings):
 
     # Nested settings
     azure: Annotated[AzureSettings, Field(default_factory=AzureSettings)]
+    blob_store_names: Annotated[BlobStoreNamesSettings, Field(default_factory=BlobStoreNamesSettings)]
     auth0: Auth0Settings
     fca_api: Annotated[FcaApiSettings, Field(default_factory=FcaApiSettings)]
 

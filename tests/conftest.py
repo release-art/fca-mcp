@@ -21,6 +21,9 @@ def test_settings() -> fca_mcp.settings.Settings:
             credential="none",
             storage_connection_string="DefaultEndpointsProtocol=https;AccountName=testaccount;AccountKey=dGVzdGtleQ==;EndpointSuffix=core.windows.net",
         ),
+        blob_store_names=fca_mcp.settings.BlobStoreNamesSettings(
+            auth0_clients="test-auth0-clients",
+        ),
         auth0=fca_mcp.settings.RemoteAuth0Settings(
             domain="test.auth0.com",
             audience="https://test-api.example.com",
