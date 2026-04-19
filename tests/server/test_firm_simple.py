@@ -37,7 +37,7 @@ async def test_get_firm_names(mcp_client: Client[FastMCPTransport]):
 @pytest.mark.asyncio
 async def test_get_firm_addresses(mcp_client: Client[FastMCPTransport]):
     tool_result = await mcp_client.call_tool(
-        name="get_firm_adresses",
+        name="get_firm_addresses",
         arguments={
             "frn": "759676",
         },

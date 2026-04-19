@@ -17,7 +17,7 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes
 | Module | Tools |
 |--------|-------|
 | [`search.py`](src/fca_mcp/server/search.py) | `search_frn`, `search_irn`, `search_prn` |
-| [`firms.py`](src/fca_mcp/server/firms.py) | `get_firm`, `get_firm_names`, `get_firm_adresses`, `get_firm_controlled_functions`, `get_firm_individuals`, `get_firm_permissions`, `get_firm_requirements`, `get_firm_requirement_investment_types`, `get_firm_regulators`, `get_firm_passports`, `get_firm_passport_permissions`, `get_firm_waivers`, `get_firm_exclusions`, `get_firm_disciplinary_history`, `get_firm_appointed_representatives` |
+| [`firms.py`](src/fca_mcp/server/firms.py) | `get_firm`, `get_firm_names`, `get_firm_addresses`, `get_firm_controlled_functions`, `get_firm_individuals`, `get_firm_permissions`, `get_firm_requirements`, `get_firm_requirement_investment_types`, `get_firm_regulators`, `get_firm_passports`, `get_firm_passport_permissions`, `get_firm_waivers`, `get_firm_exclusions`, `get_firm_disciplinary_history`, `get_firm_appointed_representatives` |
 | [`individuals.py`](src/fca_mcp/server/individuals.py) | `get_individual`, `get_individual_controlled_functions`, `get_individual_disciplinary_history` |
 | [`funds.py`](src/fca_mcp/server/funds.py) | `get_fund`, `get_fund_names`, `get_fund_subfunds` |
 | [`markets.py`](src/fca_mcp/server/markets.py) | `get_regulated_markets` |

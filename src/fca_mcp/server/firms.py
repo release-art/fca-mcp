@@ -66,7 +66,7 @@ async def get_firm_names(
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
-async def get_firm_adresses(
+async def get_firm_addresses(
     frn: FrnParam,
     next_page_token: fca_api.types.pagination.NextPageToken | None = None,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
