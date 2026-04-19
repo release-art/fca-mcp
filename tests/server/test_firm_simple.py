@@ -92,7 +92,7 @@ async def test_get_firm_requirement_investment_types(mcp_client: Client[FastMCPT
         },
     )
     assert tool_result is not None
-    assert "items=[]" in str(tool_result.data)
+    assert "data=[]" in str(tool_result.data)
 
 
 @pytest.mark.asyncio
@@ -153,7 +153,7 @@ async def test_get_firm_exclusions(mcp_client: Client[FastMCPTransport]):
         },
     )
     assert tool_result is not None
-    assert "items=[]" in str(tool_result.data)
+    assert "data=[]" in str(tool_result.data)
 
 
 @pytest.mark.asyncio

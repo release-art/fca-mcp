@@ -1,8 +1,8 @@
-import json
 import pathlib
 
 import fca_api
 import pydantic
+from fca_api.types.pagination import PaginationInfo
 
 
 class PydanticModel:
@@ -23,52 +23,54 @@ class PydanticModel:
         return cls.model_validate(d["data"])
 
 
-class MockMultipageListLoaded:
-    def __init__(self, cached_file: pathlib.Path):
-        self.cached_file = cached_file
-        self._data = None
-
-
 class MockMultipageListReadOnly:
-    data: dict
-    cur_index: int = 0
+    def __init__(self, cached_data: dict):
+        if "data" in cached_data:
+            # New format
+            self._data = [PydanticModel.from_dict(el) for el in cached_data["data"]]
+            p = cached_data["pagination"]
+            self._pagination = PaginationInfo(
+                has_next=p["has_next"],
+                next_page=p.get("next_page"),
+                size=p.get("size"),
+            )
+        else:
+            # Legacy format: {"calls": [{"call": "local_items", "out": [...]}]}
+            calls = cached_data.get("calls", [])
+            items_raw = calls[0]["out"] if calls and calls[0]["call"] == "local_items" else []
+            self._data = [PydanticModel.from_dict(el) for el in items_raw]
+            self._pagination = PaginationInfo(has_next=False, next_page=None, size=None)
 
-    def __init__(self, data: dict):
-        self.data = data
-        self.cur_index = 0
+    @property
+    def data(self):
+        return self._data
 
-    def _get_next_call(self, exp_name: str):
-        if self.cur_index >= len(self.data["calls"]):
-            raise IndexError(f"No more calls in cached data, expected call to {exp_name}")
-        call = self.data["calls"][self.cur_index]
-        assert call["call"] == exp_name, f"Expected call to {exp_name}, got call to {call['call']}"
-        self.cur_index += 1
-        return call
-
-    def local_items(self):
-        call = self._get_next_call("local_items")
-        return [PydanticModel.from_dict(el) for el in call["out"]]
+    @property
+    def pagination(self) -> PaginationInfo:
+        return self._pagination
 
 
 class MockMultipageListSource:
-    cached_file: pathlib.Path
-    src: fca_api.types.pagination.MultipageList
-    data: dict
-
     def __init__(self, cached_file: pathlib.Path, src: fca_api.types.pagination.MultipageList):
         self.cached_file = cached_file
-        self.src = src
-        self.data = {"type": "MultipageList", "calls": []}
+        self._data = src.data
+        self._pagination = src.pagination
 
-    def local_items(self):
-        out = self.src.local_items()
-        self.data["calls"].append({"call": "local_items", "out": [PydanticModel.to_dict(el) for el in out]})
-        self.flush()
-        return out
+    @property
+    def data(self):
+        return self._data
 
-    def get_state(self):
-        return self.data
+    @property
+    def pagination(self) -> PaginationInfo:
+        return self._pagination
 
-    def flush(self):
-        with self.cached_file.open("w") as f:
-            json.dump(self.get_state(), f, indent=2, sort_keys=True)
+    def get_state(self) -> dict:
+        return {
+            "type": "MultipageList",
+            "data": [PydanticModel.to_dict(el) for el in self._data],
+            "pagination": {
+                "has_next": self._pagination.has_next,
+                "next_page": self._pagination.next_page,
+                "size": self._pagination.size,
+            },
+        }

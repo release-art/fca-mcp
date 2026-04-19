@@ -354,6 +354,7 @@ class Settings(BaseSettings):
             mode = os.environ.get("AUTH0_MODE", AuthMode.REMOTE)
             data["auth0"] = ProxyAuth0Settings() if mode == AuthMode.PROXY else RemoteAuth0Settings()
         return data
+
     server: Annotated[ServerSettings, Field(default_factory=ServerSettings)]
     logging: Annotated[LoggingSettings, Field(default_factory=LoggingSettings)]
 

@@ -48,43 +48,48 @@ async def get_firm(frn: FrnParam, fca_client: fca_api.async_api.Client = deps.Fc
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_names(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[fca_api.types.firm.FirmNameAlias]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmNameAlias]:
     """Retrieve all registered names and trading name aliases for a specific FCA-regulated firm.
 
     Use this tool to find alternative, former, or trading names a firm has used. Useful
     for verifying whether two different names refer to the same regulated entity. If you
     do not have an FRN, call search_frn first with the firm name.
     """
-    out = await fca_client.get_firm_names(frn)
-    els = out.local_items()
-    return types.list_t.PaginatedList[types.firm.FirmNameAlias](
-        items=[types.firm.FirmNameAlias.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_names(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmNameAlias](
+        data=[types.firm.FirmNameAlias.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_adresses(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.firm.FirmAddress]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmAddress]:
     """Retrieve all registered addresses for a specific FCA-regulated firm, including current and historical addresses.
 
     Use this tool when you need a firm's physical location, correspondence address, or
     want to trace address changes over time. If you do not have an FRN, call search_frn
     first with the firm name.
     """
-    out = await fca_client.get_firm_addresses(frn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmAddress](
-        items=[types.firm.FirmAddress.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_addresses(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmAddress](
+        data=[types.firm.FirmAddress.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_controlled_functions(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.firm.FirmControlledFunction]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmControlledFunction]:
     """Retrieve the controlled functions held at a specific FCA-regulated firm.
 
     Controlled functions are senior management or customer-facing roles that require FCA
@@ -93,18 +98,19 @@ async def get_firm_controlled_functions(
     call search_frn first. To find which specific individuals hold these roles, use
     get_firm_individuals instead.
     """
-    out = await fca_client.get_firm_controlled_functions(frn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmControlledFunction](
-        items=[types.firm.FirmControlledFunction.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_controlled_functions(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmControlledFunction](
+        data=[types.firm.FirmControlledFunction.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_individuals(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.firm.FirmIndividual]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmIndividual]:
     """Retrieve all FCA-registered individuals associated with a specific firm.
 
     Returns individuals and the controlled functions (regulated roles) they hold at the
@@ -113,18 +119,19 @@ async def get_firm_individuals(
     search_frn first. For detailed information about a specific individual, use their IRN
     with get_individual.
     """
-    out = await fca_client.get_firm_individuals(frn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmIndividual](
-        items=[types.firm.FirmIndividual.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_individuals(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmIndividual](
+        data=[types.firm.FirmIndividual.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_permissions(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.firm.FirmPermission]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmPermission]:
     """Retrieve the regulatory permissions granted to a specific FCA-regulated firm.
 
     Permissions define what regulated activities a firm is authorized to carry out, such
@@ -132,18 +139,19 @@ async def get_firm_permissions(
     this tool to verify what a firm is authorized to do under FCA regulation. If you do
     not have an FRN, call search_frn first with the firm name.
     """
-    out = await fca_client.get_firm_permissions(frn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmPermission](
-        items=[types.firm.FirmPermission.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_permissions(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmPermission](
+        data=[types.firm.FirmPermission.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_requirements(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.firm.FirmRequirement]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmRequirement]:
     """Retrieve regulatory requirements imposed on a specific FCA-regulated firm.
 
     Requirements are conditions or restrictions placed on a firm's authorization by the
@@ -152,12 +160,11 @@ async def get_firm_requirements(
     To see which investment types a specific requirement applies to, use
     get_firm_requirement_investment_types with the requirement reference from these results.
     """
-    out = await fca_client.get_firm_requirements(frn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmRequirement](
-        items=[types.firm.FirmRequirement.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_requirements(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmRequirement](
+        data=[types.firm.FirmRequirement.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
@@ -169,26 +176,28 @@ async def get_firm_requirement_investment_types(
             description="The requirement reference identifier, obtained from get_firm_requirements results.",
         ),
     ],
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> types.list_t.PaginatedList[types.firm.FirmRequirementInvestmentType]:
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmRequirementInvestmentType]:
     """Retrieve the investment types associated with a specific regulatory requirement for an FCA-regulated firm.
 
     Use this tool after calling get_firm_requirements to drill into which investment types
     a particular requirement applies to. Requires both a Firm Reference Number (FRN) and
     a requirement reference (req_ref) obtained from get_firm_requirements results.
     """
-    out = await fca_client.get_firm_requirement_investment_types(frn, req_ref)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmRequirementInvestmentType](
-        items=[types.firm.FirmRequirementInvestmentType.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_requirement_investment_types(frn, req_ref, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmRequirementInvestmentType](
+        data=[types.firm.FirmRequirementInvestmentType.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_regulators(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.firm.FirmRegulator]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmRegulator]:
     """Retrieve the regulators responsible for overseeing a specific firm.
 
     Most FCA-regulated firms are overseen by the FCA alone, but some (e.g., banks,
@@ -196,18 +205,19 @@ async def get_firm_regulators(
     Authority). Use this tool to determine which regulatory bodies have jurisdiction
     over a firm. If you do not have an FRN, call search_frn first.
     """
-    out = await fca_client.get_firm_regulators(frn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmRegulator](
-        items=[types.firm.FirmRegulator.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_regulators(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmRegulator](
+        data=[types.firm.FirmRegulator.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_passports(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.firm.FirmPassport]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmPassport]:
     """Retrieve the regulatory passports held by a specific FCA-regulated firm.
 
     Passports (under pre-Brexit EEA arrangements) allow a firm authorized in one
@@ -216,12 +226,11 @@ async def get_firm_passports(
     call search_frn first. To see specific permissions in a passported country, use
     get_firm_passport_permissions with the country from these results.
     """
-    out = await fca_client.get_firm_passports(frn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmPassport](
-        items=[types.firm.FirmPassport.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_passports(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmPassport](
+        data=[types.firm.FirmPassport.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
@@ -235,26 +244,28 @@ async def get_firm_passport_permissions(
             ),
         ),
     ],
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> types.list_t.PaginatedList[types.firm.FirmPassportPermission]:
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmPassportPermission]:
     """Retrieve the specific permissions a firm holds under its regulatory passport in a given country.
 
     Use this tool after calling get_firm_passports to drill into what a firm is authorized
     to do in a specific passported jurisdiction. Requires both a Firm Reference Number
     (FRN) and a country name obtained from get_firm_passports results.
     """
-    out = await fca_client.get_firm_passport_permissions(frn, country)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmPassportPermission](
-        items=[types.firm.FirmPassportPermission.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_passport_permissions(frn, country, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmPassportPermission](
+        data=[types.firm.FirmPassportPermission.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_waivers(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.firm.FirmWaiver]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmWaiver]:
     """Retrieve any regulatory waivers granted to a specific FCA-regulated firm.
 
     Waivers are formal modifications to regulatory rules that the FCA has granted to a
@@ -262,18 +273,19 @@ async def get_firm_waivers(
     Use this tool to check if a firm has been granted any special regulatory concessions.
     If you do not have an FRN, call search_frn first.
     """
-    out = await fca_client.get_firm_waivers(frn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmWaiver](
-        items=[types.firm.FirmWaiver.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_waivers(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmWaiver](
+        data=[types.firm.FirmWaiver.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_exclusions(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.firm.FirmExclusion]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmExclusion]:
     """Retrieve any exclusions that apply to a specific FCA-regulated firm.
 
     Exclusions define specific regulated activities or products that a firm is explicitly
@@ -281,18 +293,19 @@ async def get_firm_exclusions(
     understand limitations on a firm's authorization. If you do not have an FRN, call
     search_frn first.
     """
-    out = await fca_client.get_firm_exclusions(frn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmExclusion](
-        items=[types.firm.FirmExclusion.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_exclusions(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmExclusion](
+        data=[types.firm.FirmExclusion.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_disciplinary_history(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.firm.FirmDisciplinaryRecord]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmDisciplinaryRecord]:
     """Retrieve the disciplinary history of a specific FCA-regulated firm.
 
     Returns records of enforcement actions, fines, public censures, or other disciplinary
@@ -300,18 +313,19 @@ async def get_firm_disciplinary_history(
     compliance track record or checking for past regulatory sanctions. If you do not have
     an FRN, call search_frn first.
     """
-    out = await fca_client.get_firm_disciplinary_history(frn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmDisciplinaryRecord](
-        items=[types.firm.FirmDisciplinaryRecord.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_disciplinary_history(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmDisciplinaryRecord](
+        data=[types.firm.FirmDisciplinaryRecord.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @firms_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_firm_appointed_representatives(
-    frn: FrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.firm.FirmAppointedRepresentative]:
+    frn: FrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.firm.FirmAppointedRepresentative]:
     """Retrieve the appointed representatives (ARs) of a specific FCA-regulated firm.
 
     Appointed representatives are firms or individuals authorized to carry out regulated
@@ -319,12 +333,11 @@ async def get_firm_appointed_representatives(
     authorized by the FCA themselves. Use this tool to find which entities operate under
     a firm's regulatory umbrella. If you do not have an FRN, call search_frn first.
     """
-    out = await fca_client.get_firm_appointed_representatives(frn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.firm.FirmAppointedRepresentative](
-        items=[types.firm.FirmAppointedRepresentative.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_firm_appointed_representatives(frn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.firm.FirmAppointedRepresentative](
+        data=[types.firm.FirmAppointedRepresentative.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 def get_server() -> fastmcp.FastMCP:

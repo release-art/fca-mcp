@@ -47,26 +47,29 @@ async def get_fund(
 
 @funds_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_fund_names(
-    prn: PrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.products.ProductNameAlias]:
+    prn: PrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.products.ProductNameAlias]:
     """Retrieve all names and name aliases for a specific FCA-registered investment fund.
 
     Use this tool to find alternative, former, or marketing names a fund has used. Useful
     for verifying whether different names refer to the same fund entity. If you do not
     have a PRN, call search_prn first with the fund name.
     """
-    out = await fca_client.get_fund_names(prn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.products.ProductNameAlias](
-        items=[types.products.ProductNameAlias.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_fund_names(prn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.products.ProductNameAlias](
+        data=[types.products.ProductNameAlias.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 @funds_mcp.tool(annotations=_TOOL_ANNOTATIONS)
 async def get_fund_subfunds(
-    prn: PrnParam, fca_client: fca_api.async_api.Client = deps.FcaApiDep
-) -> types.list_t.PaginatedList[types.products.SubFundDetails]:
+    prn: PrnParam,
+    next_page_token: fca_api.types.pagination.NextPageToken | None = None,
+    fca_client: fca_api.async_api.Client = deps.FcaApiDep,
+) -> fca_api.types.pagination.MultipageList[types.products.SubFundDetails]:
     """Retrieve all sub-funds within a specific FCA-registered umbrella fund.
 
     Sub-funds are distinct investment compartments within a larger fund structure, each
@@ -74,12 +77,11 @@ async def get_fund_subfunds(
     explore the components of an umbrella or multi-compartment fund. If you do not have
     a PRN, call search_prn first with the fund name.
     """
-    out = await fca_client.get_fund_subfunds(prn)
-    els = out.local_items()
-    out = types.list_t.PaginatedList[types.products.SubFundDetails](
-        items=[types.products.SubFundDetails.from_api_t(el) for el in els], start_index=0, has_next=False
+    out = await fca_client.get_fund_subfunds(prn, next_page=next_page_token)
+    return fca_api.types.pagination.MultipageList[types.products.SubFundDetails](
+        data=[types.products.SubFundDetails.from_api_t(el) for el in out.data],
+        pagination=out.pagination,
     )
-    return out
 
 
 def get_server() -> fastmcp.FastMCP:
