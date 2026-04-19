@@ -37,7 +37,7 @@ async def test_get_firm_names(mcp_client: Client[FastMCPTransport]):
 @pytest.mark.asyncio
 async def test_get_firm_addresses(mcp_client: Client[FastMCPTransport]):
     tool_result = await mcp_client.call_tool(
-        name="get_firm_adresses",
+        name="get_firm_addresses",
         arguments={
             "frn": "759676",
         },
@@ -92,7 +92,7 @@ async def test_get_firm_requirement_investment_types(mcp_client: Client[FastMCPT
         },
     )
     assert tool_result is not None
-    assert "items=[]" in str(tool_result.data)
+    assert "data=[]" in str(tool_result.data)
 
 
 @pytest.mark.asyncio
@@ -153,7 +153,7 @@ async def test_get_firm_exclusions(mcp_client: Client[FastMCPTransport]):
         },
     )
     assert tool_result is not None
-    assert "items=[]" in str(tool_result.data)
+    assert "data=[]" in str(tool_result.data)
 
 
 @pytest.mark.asyncio

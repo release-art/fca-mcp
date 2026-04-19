@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import logging
 
 import fastmcp
@@ -22,6 +23,14 @@ logger = logging.getLogger(__name__)
 from . import app, auth, deps, firms, funds, individuals, markets, search, types
 
 
+class _Base64PageTokenSerializer:
+    def serialize(self, token: str) -> str:
+        return base64.b64encode(token.encode()).decode()
+
+    def deserialize(self, token: str) -> str:
+        return base64.b64decode(token.encode()).decode()
+
+
 @lifespan
 async def mcp_lifespan(mcp_app: fastmcp.FastMCP):
     """Open a single ``fca_api`` client for the server's lifetime.
@@ -30,7 +39,10 @@ async def mcp_lifespan(mcp_app: fastmcp.FastMCP):
     shutdown via the async-context-manager protocol.
     """
     settings = fca_mcp.settings.get_settings()
-    client = fca_api.async_api.Client((settings.fca_api.username, settings.fca_api.key))
+    client = fca_api.async_api.Client(
+        (settings.fca_api.username, settings.fca_api.key),
+        page_token_serializer=_Base64PageTokenSerializer(),
+    )
     logger.info(f"Server {mcp_app} initialized successfully")
     async with client:
         yield {"fca_app": app.FcaApp(fca_api=client)}

@@ -47,7 +47,7 @@ docker-compose up --build
 `get_server()` in `src/fca_mcp/server/__init__.py` builds the main FastMCP instance and mounts five sub-servers, each owning a group of tools:
 
 - `search.py` — 3 tools: `search_frn`, `search_irn`, `search_prn`
-- `firms.py` — 15 tools: `get_firm`, `get_firm_names`, `get_firm_adresses` (sic — typo preserved in the current API), etc.
+- `firms.py` — 15 tools: `get_firm`, `get_firm_names`, `get_firm_addresses`, etc.
 - `funds.py` — 3 tools: `get_fund`, `get_fund_names`, `get_fund_subfunds`
 - `individuals.py` — 3 tools: `get_individual`, `get_individual_controlled_functions`, `get_individual_disciplinary_history`
 - `markets.py` — 1 tool: `get_regulated_markets`
