@@ -52,7 +52,6 @@ def _get_proxy_auth_provider(auth0: fca_mcp.settings.ProxyAuth0Settings) -> Auth
 
     import fca_mcp.azure.api
     import fca_mcp.azure.blob_key_value
-    import fca_mcp.azure.storage_container_names
 
     settings = fca_mcp.settings.get_settings()
     tmp_api = fca_mcp.azure.api.AzureAPI(settings.azure)
@@ -68,7 +67,7 @@ def _get_proxy_auth_provider(auth0: fca_mcp.settings.ProxyAuth0Settings) -> Auth
         client_storage=FernetEncryptionWrapper(
             key_value=fca_mcp.azure.blob_key_value.AzureBlobStore(
                 client=tmp_api.blob_service_client,
-                container_name=fca_mcp.azure.storage_container_names.AUTH_CLIENT_STORE,
+                container_name=settings.blob_store_names.auth0_clients,
                 default_collection="auth0_clients",
             ),
             fernet=Fernet(auth0.storage_encryption_key),

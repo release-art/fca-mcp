@@ -31,6 +31,7 @@ settings.server.base_url
 | `cors_origins` | `CORS_ORIGINS` | `list[str]` | `["*"]` | |
 | `api_version` | `API_VERSION` | `str` | `"v1"` | |
 | `azure` | `AZURE_*` | `AzureSettings` | (factory) | |
+| `blob_store_names` | `BLOB_STORE_NAME_*` | `BlobStoreNamesSettings` | (factory) | Blob container names per internal store. |
 | `auth0` | `AUTH0_*` | `RemoteAuth0Settings` \| `ProxyAuth0Settings` | mode selected via `AUTH0_MODE` | |
 | `fca_api` | `FCA_API_*` | `FcaApiSettings` | (factory) | |
 | `server` | `SERVER_*` | `ServerSettings` | (factory) | |
@@ -75,6 +76,14 @@ The `auth0` block is a tagged union discriminated by `mode`. Choose the mode by 
 | `AZURE_STORAGE_TABLE_ENDPOINT` | `str` | `https://{account}.table.core.windows.net` | Optional override. |
 
 Only the blob endpoint is used today (for OAuth client storage); the queue/table endpoints exist for future extension.
+
+## `blob_store_names` — Azure Blob container names
+
+Names of the Azure Blob Storage containers the application provisions/uses. Override any of these to match your environment's naming conventions.
+
+| Env var | Type | Default | Description |
+|---------|------|---------|-------------|
+| `BLOB_STORE_NAME_AUTH0_CLIENTS` | `str` | `auth0-clients` | Container for OAuth client registrations in `AUTH0_MODE=proxy`. |
 
 Local development with Azurite:
 
