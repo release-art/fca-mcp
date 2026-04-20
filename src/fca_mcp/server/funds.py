@@ -50,7 +50,7 @@ async def get_fund_names(
     prn: PrnParam,
     next_page_token: fca_api.types.pagination.NextPageToken | None = None,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> fca_api.types.pagination.MultipageList[types.products.ProductNameAlias]:
+) -> types.pagination.MultipageList[types.products.ProductNameAlias]:
     """Retrieve all names and name aliases for a specific FCA-registered investment fund.
 
     Use this tool to find alternative, former, or marketing names a fund has used. Useful
@@ -58,9 +58,9 @@ async def get_fund_names(
     have a PRN, call search_prn first with the fund name.
     """
     out = await fca_client.get_fund_names(prn, next_page=next_page_token)
-    return fca_api.types.pagination.MultipageList[types.products.ProductNameAlias](
-        data=[types.products.ProductNameAlias.from_api_t(el) for el in out.data],
-        pagination=out.pagination,
+    return types.pagination.MultipageList[types.products.ProductNameAlias](
+        items=[types.products.ProductNameAlias.from_api_t(el) for el in out.data],
+        pagination=types.pagination.PaginationInfo.from_api_t(out.pagination),
     )
 
 
@@ -69,7 +69,7 @@ async def get_fund_subfunds(
     prn: PrnParam,
     next_page_token: fca_api.types.pagination.NextPageToken | None = None,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> fca_api.types.pagination.MultipageList[types.products.SubFundDetails]:
+) -> types.pagination.MultipageList[types.products.SubFundDetails]:
     """Retrieve all sub-funds within a specific FCA-registered umbrella fund.
 
     Sub-funds are distinct investment compartments within a larger fund structure, each
@@ -78,9 +78,9 @@ async def get_fund_subfunds(
     a PRN, call search_prn first with the fund name.
     """
     out = await fca_client.get_fund_subfunds(prn, next_page=next_page_token)
-    return fca_api.types.pagination.MultipageList[types.products.SubFundDetails](
-        data=[types.products.SubFundDetails.from_api_t(el) for el in out.data],
-        pagination=out.pagination,
+    return types.pagination.MultipageList[types.products.SubFundDetails](
+        items=[types.products.SubFundDetails.from_api_t(el) for el in out.data],
+        pagination=types.pagination.PaginationInfo.from_api_t(out.pagination),
     )
 
 

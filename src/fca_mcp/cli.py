@@ -26,6 +26,7 @@ app = typer.Typer(pretty_exceptions_enable=False)
 def startup(ctx: typer.Context):
     """Startup callback that runs before any command."""
     fca_mcp.logging.configure()
+    fca_mcp.telemetry.configure()
     logger.info("Fca Mcp CLI started.")
 
 

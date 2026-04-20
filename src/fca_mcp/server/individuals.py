@@ -51,7 +51,7 @@ async def get_individual_controlled_functions(
     irn: IrnParam,
     next_page_token: fca_api.types.pagination.NextPageToken | None = None,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> fca_api.types.pagination.MultipageList[types.individual.IndividualControlledFunction]:
+) -> types.pagination.MultipageList[types.individual.IndividualControlledFunction]:
     """Retrieve the controlled functions held by a specific FCA-registered individual across all associated firms.
 
     Controlled functions are FCA-approved roles such as Director (CF1), Compliance Oversight
@@ -60,9 +60,9 @@ async def get_individual_controlled_functions(
     with the person's name.
     """
     out = await fca_client.get_individual_controlled_functions(irn, next_page=next_page_token)
-    return fca_api.types.pagination.MultipageList[types.individual.IndividualControlledFunction](
-        data=[types.individual.IndividualControlledFunction.from_api_t(el) for el in out.data],
-        pagination=out.pagination,
+    return types.pagination.MultipageList[types.individual.IndividualControlledFunction](
+        items=[types.individual.IndividualControlledFunction.from_api_t(el) for el in out.data],
+        pagination=types.pagination.PaginationInfo.from_api_t(out.pagination),
     )
 
 
@@ -71,7 +71,7 @@ async def get_individual_disciplinary_history(
     irn: IrnParam,
     next_page_token: fca_api.types.pagination.NextPageToken | None = None,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> fca_api.types.pagination.MultipageList[types.individual.IndividualDisciplinaryRecord]:
+) -> types.pagination.MultipageList[types.individual.IndividualDisciplinaryRecord]:
     """Retrieve the disciplinary history of a specific FCA-registered individual.
 
     Returns records of enforcement actions, prohibitions, fines, or other regulatory
@@ -80,9 +80,9 @@ async def get_individual_disciplinary_history(
     do not have an IRN, call search_irn first with the person's name.
     """
     out = await fca_client.get_individual_disciplinary_history(irn, next_page=next_page_token)
-    return fca_api.types.pagination.MultipageList[types.individual.IndividualDisciplinaryRecord](
-        data=[types.individual.IndividualDisciplinaryRecord.from_api_t(el) for el in out.data],
-        pagination=out.pagination,
+    return types.pagination.MultipageList[types.individual.IndividualDisciplinaryRecord](
+        items=[types.individual.IndividualDisciplinaryRecord.from_api_t(el) for el in out.data],
+        pagination=types.pagination.PaginationInfo.from_api_t(out.pagination),
     )
 
 

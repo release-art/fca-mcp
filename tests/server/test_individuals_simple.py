@@ -24,7 +24,7 @@ async def test_get_individual_controlled_functions(mcp_client: Client[FastMCPTra
         },
     )
     assert tool_result is not None
-    assert len(tool_result.data.data) > 0
+    assert len(tool_result.data.items) > 0
     assert "[FCA CF] Client dealing" in str(tool_result.data)
 
 
@@ -37,5 +37,5 @@ async def test_get_individual_disciplinary_history(mcp_client: Client[FastMCPTra
         },
     )
     assert tool_result is not None
-    assert len(tool_result.data.data) > 0
+    assert len(tool_result.data.items) > 0
     assert "Final Notice" in str(tool_result.data)

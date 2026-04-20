@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 import logging
 
 import fastmcp
 import fca_api
+import jwt
 from fastmcp.server.auth import restrict_tag
 from fastmcp.server.lifespan import lifespan
 from fastmcp.server.middleware import AuthMiddleware
@@ -23,12 +23,18 @@ logger = logging.getLogger(__name__)
 from . import app, auth, deps, firms, funds, individuals, markets, search, types
 
 
-class _Base64PageTokenSerializer:
+class _JWTPageTokenSerializer:
+    _secret: str
+
+    def __init__(self, secret: str) -> None:
+        self._secret = secret
+
     def serialize(self, token: str) -> str:
-        return base64.b64encode(token.encode()).decode()
+        return jwt.encode({"tok": token}, self._secret, algorithm="HS256")
 
     def deserialize(self, token: str) -> str:
-        return base64.b64decode(token.encode()).decode()
+        payload = jwt.decode(token, self._secret, algorithms=["HS256"])
+        return payload["tok"]
 
 
 @lifespan
@@ -41,7 +47,7 @@ async def mcp_lifespan(mcp_app: fastmcp.FastMCP):
     settings = fca_mcp.settings.get_settings()
     client = fca_api.async_api.Client(
         (settings.fca_api.username, settings.fca_api.key),
-        page_token_serializer=_Base64PageTokenSerializer(),
+        page_token_serializer=_JWTPageTokenSerializer(settings.server.jwt_secret_key),
     )
     logger.info(f"Server {mcp_app} initialized successfully")
     async with client:
@@ -57,7 +63,7 @@ def get_server() -> fastmcp.FastMCP:
     auth provider.
     """
     main = fastmcp.FastMCP(
-        "Release.art public MCP",
+        f"Release.art public MCP v{fca_mcp.__version__.__version__}",
         lifespan=mcp_lifespan,
         website_url="https://www.release.art/",
         icons=[

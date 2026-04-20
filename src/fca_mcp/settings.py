@@ -284,6 +284,12 @@ class ServerSettings(BaseSettings):
             description="Number of worker processes",
         ),
     ]
+    jwt_secret_key: Annotated[
+        str,
+        Field(
+            description="Secret key for signing JWTs (if applicable)",
+        ),
+    ]
 
 
 class LoggingSettings(BaseSettings):

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import logging
 import logging.config
+import os
 
 logger = logging.getLogger(__name__)
+
+_HUMAN_LOGS = os.environ.get("HUMAN_LOGS", "").lower() in ("1", "true", "yes", "on")
 
 
 def get_config() -> dict:
@@ -20,13 +23,20 @@ def get_config() -> dict:
             "sse_starlette.sse",
         ]
     }
+    if _HUMAN_LOGS:
+        formatter = {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        }
+    else:
+        formatter = {
+            "()": "pythonjsonlogger.json.JsonFormatter",
+            "fmt": "%(asctime)s %(name)s %(levelname)s %(message)s",
+        }
     return {
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
-            "default": {
-                "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            },
+            "default": formatter,
         },
         "handlers": {
             "console": {
