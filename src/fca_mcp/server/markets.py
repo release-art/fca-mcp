@@ -22,7 +22,7 @@ _TOOL_ANNOTATIONS = ToolAnnotations(
 async def get_regulated_markets(
     next_page_token: fca_api.types.pagination.NextPageToken | None = None,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> fca_api.types.pagination.MultipageList[types.markets.RegulatedMarket]:
+) -> types.pagination.MultipageList[types.markets.RegulatedMarket]:
     """Retrieve the complete list of FCA-recognised regulated markets (exchanges and trading venues).
 
     Regulated markets are multilateral trading venues where financial instruments are
@@ -32,9 +32,9 @@ async def get_regulated_markets(
     markets.
     """
     out = await fca_client.get_regulated_markets(next_page=next_page_token)
-    return fca_api.types.pagination.MultipageList[types.markets.RegulatedMarket](
-        data=[types.markets.RegulatedMarket.from_api_t(el) for el in out.data],
-        pagination=out.pagination,
+    return types.pagination.MultipageList[types.markets.RegulatedMarket](
+        items=[types.markets.RegulatedMarket.from_api_t(el) for el in out.data],
+        pagination=types.pagination.PaginationInfo.from_api_t(out.pagination),
     )
 
 

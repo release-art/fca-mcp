@@ -41,7 +41,7 @@ async def search_frn(
     ],
     next_page_token: fca_api.types.pagination.NextPageToken | None = None,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> fca_api.types.pagination.MultipageList[types.search.FirmSearchResult]:
+) -> types.pagination.MultipageList[types.search.FirmSearchResult]:
     """Search the UK FCA Financial Services Register for regulated firms by name or partial name match.
 
     Use this tool when the user asks about a financial firm, wants to verify if a company is
@@ -51,9 +51,9 @@ async def search_frn(
     specific FRN for full details.
     """
     out = await fca_client.search_frn(firm_name, next_page=next_page_token)
-    return fca_api.types.pagination.MultipageList[types.search.FirmSearchResult](
-        data=[types.search.FirmSearchResult.from_api_t(el) for el in out.data],
-        pagination=out.pagination,
+    return types.pagination.MultipageList[types.search.FirmSearchResult](
+        items=[types.search.FirmSearchResult.from_api_t(el) for el in out.data],
+        pagination=types.pagination.PaginationInfo.from_api_t(out.pagination),
     )
 
 
@@ -68,7 +68,7 @@ async def search_irn(
     ],
     next_page_token: fca_api.types.pagination.NextPageToken | None = None,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> fca_api.types.pagination.MultipageList[types.search.IndividualSearchResult]:
+) -> types.pagination.MultipageList[types.search.IndividualSearchResult]:
     """Search the UK FCA Financial Services Register for registered individuals by name.
 
     Use this tool when the user asks about a specific person in financial services, wants to
@@ -78,9 +78,9 @@ async def search_irn(
     details — call get_individual with a specific IRN for full details.
     """
     out = await fca_client.search_irn(individual_name, next_page=next_page_token)
-    return fca_api.types.pagination.MultipageList[types.search.IndividualSearchResult](
-        data=[types.search.IndividualSearchResult.from_api_t(el) for el in out.data],
-        pagination=out.pagination,
+    return types.pagination.MultipageList[types.search.IndividualSearchResult](
+        items=[types.search.IndividualSearchResult.from_api_t(el) for el in out.data],
+        pagination=types.pagination.PaginationInfo.from_api_t(out.pagination),
     )
 
 
@@ -95,7 +95,7 @@ async def search_prn(
     ],
     next_page_token: fca_api.types.pagination.NextPageToken | None = None,
     fca_client: fca_api.async_api.Client = deps.FcaApiDep,
-) -> fca_api.types.pagination.MultipageList[types.search.FundSearchResult]:
+) -> types.pagination.MultipageList[types.search.FundSearchResult]:
     """Search the UK FCA Financial Services Register for investment funds by name or partial name match.
 
     Use this tool when the user asks about a specific investment fund, wants to verify if a
@@ -105,9 +105,9 @@ async def search_prn(
     for comprehensive information.
     """
     out = await fca_client.search_prn(fund_name, next_page=next_page_token)
-    return fca_api.types.pagination.MultipageList[types.search.FundSearchResult](
-        data=[types.search.FundSearchResult.from_api_t(el) for el in out.data],
-        pagination=out.pagination,
+    return types.pagination.MultipageList[types.search.FundSearchResult](
+        items=[types.search.FundSearchResult.from_api_t(el) for el in out.data],
+        pagination=types.pagination.PaginationInfo.from_api_t(out.pagination),
     )
 
 

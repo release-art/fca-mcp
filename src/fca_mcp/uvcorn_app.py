@@ -40,7 +40,7 @@ def get_http_app() -> Starlette:
         fca_mcp.http.mount_interactive_router(mcp)
 
     mcp_app = mcp.http_app(
-        path="/mcp",
+        path="/",
         middleware=[
             StarletteMiddleware(
                 StarletteCORSMiddleware,

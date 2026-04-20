@@ -10,5 +10,5 @@ async def test_get_regulated_markets(mcp_client: Client[FastMCPTransport]):
         arguments={},
     )
     assert tool_result is not None
-    assert len(tool_result.data.data) > 0
+    assert len(tool_result.data.items) > 0
     assert "ICE Futures Europe" in str(tool_result.data)
