@@ -5,9 +5,9 @@ from __future__ import annotations
 import asyncio
 import logging
 
-import jwt
 import fastmcp
 import fca_api
+import jwt
 from fastmcp.server.auth import restrict_tag
 from fastmcp.server.lifespan import lifespan
 from fastmcp.server.middleware import AuthMiddleware
