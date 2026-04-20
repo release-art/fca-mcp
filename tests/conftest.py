@@ -36,6 +36,7 @@ def test_settings() -> fca_mcp.settings.Settings:
             host="127.0.0.1",
             port=8000,
             base_url="http://localhost:8000",
+            jwt_secret_key="test-jwt-secret",
         ),
         logging=fca_mcp.settings.LoggingSettings(
             level="DEBUG",

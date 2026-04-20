@@ -29,6 +29,9 @@ export DEFAULT_AzureWebJobsStorage="DefaultEndpointsProtocol=http;AccountName=de
 export AZURE_STORAGE_CONNECTION_STRING="${AZURE_STORAGE_CONNECTION_STRING:-${DEFAULT_AzureWebJobsStorage}}"
 export AZURE_CREDENTIAL="${AZURE_CREDENTIAL:-none}"
 
+export HUMAN_LOGS="1"
+export SERVER_JWT_SECRET_KEY="11111111111111111111111111111111"
+
 if [ -n "$*" ]; then
     ARGS=("$@")
 else

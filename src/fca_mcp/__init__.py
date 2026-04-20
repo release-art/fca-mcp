@@ -17,6 +17,7 @@ from . import (
     logging as fca_logging,
     server,
     settings,
+    telemetry,
     uvcorn_app,
 )
 
