@@ -135,6 +135,7 @@ class BlobStoreNamesSettings(BaseSettings):
         ),
     ]
 
+
 class TableStoreNamesSettings(BaseSettings):
     """Names of Azure Table Storage tables used by the application.
 

@@ -20,7 +20,7 @@ import fca_mcp
 
 logger = logging.getLogger(__name__)
 
-from . import app, auth, deps, firms, funds, individuals, markets, search, types, middleware
+from . import app, auth, deps, firms, funds, individuals, markets, middleware, search, types
 
 
 class _JWTPageTokenSerializer:

@@ -6,7 +6,6 @@ import contextlib
 import logging
 from collections.abc import AsyncGenerator
 
-import azure.data.tables.aio as azure_tables_aio
 import mcp.types
 from fastmcp.server.middleware.caching import ResponseCachingMiddleware
 from fastmcp.server.middleware.middleware import CallNext, Middleware, MiddlewareContext

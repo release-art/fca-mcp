@@ -31,11 +31,13 @@ _jinja_env = Environment(
 async def interactive_config(request: Request) -> JSONResponse:
     """Return Auth0 config for the SPA SDK (public, non-secret values only)."""
     settings = fca_mcp.settings.get_settings()
-    return JSONResponse({
-        "auth0_domain": settings.auth0.domain,
-        "auth0_audience": settings.auth0.audience,
-        "auth0_client_id": settings.auth0.interactive_client_id,
-    })
+    return JSONResponse(
+        {
+            "auth0_domain": settings.auth0.domain,
+            "auth0_audience": settings.auth0.audience,
+            "auth0_client_id": settings.auth0.interactive_client_id,
+        }
+    )
 
 
 # @interactive_router.get("/", response_class=HTMLResponse)
