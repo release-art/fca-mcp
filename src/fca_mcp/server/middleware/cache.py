@@ -32,26 +32,8 @@ def _active_cache_table(settings: fca_mcp.settings.Settings) -> str:
     return f"{settings.table_store_names.api_cache}{_CACHE_VERSION_SLUG}"
 
 
-async def _cleanup_stale_cache_tables(
-    table_service_client: azure_tables_aio.TableServiceClient,
-    prefix: str,
-    active_table: str,
-) -> None:
-    """Delete cache tables belonging to previous cache_version values.
-
-    Bump __version__.cache_version to invalidate all cached entries on significant
-    API changes. Old tables are deleted here on startup; any entries that survive
-    (e.g. from a concurrent instance) expire naturally via their configured TTL.
-    """
-    async for table_props in table_service_client.list_tables():
-        name = table_props.name
-        if name.startswith(prefix) and name != active_table:
-            logger.info("Deleting stale cache table: %s", name)
-            await table_service_client.delete_table(name)
-
-
 @contextlib.asynccontextmanager
-async def _open_azure_cache(settings: fca_mcp.settings.Settings) -> AsyncGenerator[AsyncKeyValue, None]:
+async def open_azure_cache(settings: fca_mcp.settings.Settings) -> AsyncGenerator[AsyncKeyValue, None]:
     """Open the Azure Table Store used for API response caching.
 
     Manages the full Azure client lifecycle: opens all Azure Storage clients,
@@ -62,11 +44,6 @@ async def _open_azure_cache(settings: fca_mcp.settings.Settings) -> AsyncGenerat
     active_table = _active_cache_table(settings)
 
     async with azure_api.lifespan():
-        await _cleanup_stale_cache_tables(
-            azure_api.table_service_client,
-            str(settings.table_store_names.api_cache),
-            active_table,
-        )
         store = AzureTableStore(client=azure_api.table_service_client, table_name=active_table)
         async with store:
             yield store

@@ -30,7 +30,7 @@ def mock_azure_cache(mocker):
     async def _mock(_settings):
         yield MemoryStore()
 
-    mocker.patch("fca_mcp.server.middleware.cache._open_azure_cache", _mock)
+    mocker.patch("fca_mcp.server.middleware.cache.open_azure_cache", _mock)
 
 
 @pytest.fixture(autouse=True)

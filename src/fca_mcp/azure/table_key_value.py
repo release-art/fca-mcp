@@ -38,12 +38,12 @@ class AzureTableStore(BaseContextManagerStore, BaseEnumerateKeysStore, BaseStore
         self._table_service_client = client
         self._table_client = None
 
-        # AlwaysHashStrategy for RowKey: Azure Table forbids /, \, #, ? and control chars in
-        # PartitionKey/RowKey. Hashing all cache keys avoids character validation entirely.
-        # PartitionKey uses tool names (alphanumeric + underscore) which are always safe,
-        # so PassthroughStrategy (the default) is sufficient for collections.
+        # Azure Table forbids /, \, #, ? and control chars in both PartitionKey and RowKey.
+        # Hash both collection and key unconditionally — the caller (ResponseCachingMiddleware)
+        # uses collection names like "tools/call" which contain forbidden slashes.
         super().__init__(
             key_sanitization_strategy=AlwaysHashStrategy(hash_length=64),
+            collection_sanitization_strategy=AlwaysHashStrategy(hash_length=32),
             stable_api=True,
         )
 

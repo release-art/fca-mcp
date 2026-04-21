@@ -31,6 +31,7 @@ export AZURE_CREDENTIAL="${AZURE_CREDENTIAL:-none}"
 
 export HUMAN_LOGS="1"
 export SERVER_JWT_SECRET_KEY="11111111111111111111111111111111"
+export DEBUG="true"
 
 if [ -n "$*" ]; then
     ARGS=("$@")

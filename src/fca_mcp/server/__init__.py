@@ -20,8 +20,7 @@ import fca_mcp
 
 logger = logging.getLogger(__name__)
 
-from . import app, auth, deps, firms, funds, individuals, markets, search, types
-from .middleware import cache as _cache_middleware
+from . import app, auth, deps, firms, funds, individuals, markets, search, types, middleware
 
 
 class _JWTPageTokenSerializer:
@@ -48,7 +47,7 @@ async def mcp_lifespan(mcp_app: fastmcp.FastMCP):
     """
     settings = fca_mcp.settings.get_settings()
 
-    async with _cache_middleware._open_azure_cache(settings) as cache_store:
+    async with middleware.cache.open_azure_cache(settings) as cache_store:
         client = fca_api.async_api.Client(
             (settings.fca_api.username, settings.fca_api.key),
             page_token_serializer=_JWTPageTokenSerializer(settings.server.jwt_secret_key),
@@ -87,10 +86,10 @@ def get_server() -> fastmcp.FastMCP:
         auth=auth.provider.get_auth_provider(),
         middleware=[
             AuthMiddleware(auth=restrict_tag(auth.tags.FCA_API_RO, scopes=[auth.scopes.FCA_API_RO])),
-            ErrorHandlingMiddleware(),
+            ErrorHandlingMiddleware(include_traceback=settings.debug),
             RateLimitingMiddleware(),
             LoggingMiddleware(),
-            _cache_middleware.FcaCachingMiddleware(ttl_seconds=settings.cache.ttl_seconds),
+            middleware.cache.FcaCachingMiddleware(ttl_seconds=settings.cache.ttl_seconds),
         ],
     )
     main.mount(search.get_server())
