@@ -96,3 +96,7 @@ class AzureAPI:
     async def get_blob_container(self, container_name: str) -> azure_blob_aio.ContainerClient:
         """Get a ContainerClient for the specified blob container."""
         return self.blob_service_client.get_container_client(container=container_name)
+
+    def get_table(self, table_name: str) -> azure_tables_aio.TableClient:
+        """Get a TableClient for the specified table."""
+        return self.table_service_client.get_table_client(table=table_name)

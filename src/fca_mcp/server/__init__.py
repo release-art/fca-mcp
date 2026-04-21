@@ -21,6 +21,7 @@ import fca_mcp
 logger = logging.getLogger(__name__)
 
 from . import app, auth, deps, firms, funds, individuals, markets, search, types
+from .middleware import cache as _cache_middleware
 
 
 class _JWTPageTokenSerializer:
@@ -39,19 +40,26 @@ class _JWTPageTokenSerializer:
 
 @lifespan
 async def mcp_lifespan(mcp_app: fastmcp.FastMCP):
-    """Open a single ``fca_api`` client for the server's lifetime.
+    """Open shared resources for the server's lifetime.
 
-    The client is exposed to tools via ``deps.FcaApiDep`` and closed on
-    shutdown via the async-context-manager protocol.
+    Opens Azure Table Storage for API response caching and the FCA API client,
+    exposing both via lifespan_context. The FcaCachingMiddleware (registered at
+    server construction) reads the cache store from lifespan_context on first use.
     """
     settings = fca_mcp.settings.get_settings()
-    client = fca_api.async_api.Client(
-        (settings.fca_api.username, settings.fca_api.key),
-        page_token_serializer=_JWTPageTokenSerializer(settings.server.jwt_secret_key),
-    )
-    logger.info(f"Server {mcp_app} initialized successfully")
-    async with client:
-        yield {"fca_app": app.FcaApp(fca_api=client)}
+
+    async with _cache_middleware._open_azure_cache(settings) as cache_store:
+        client = fca_api.async_api.Client(
+            (settings.fca_api.username, settings.fca_api.key),
+            page_token_serializer=_JWTPageTokenSerializer(settings.server.jwt_secret_key),
+        )
+        logger.info("Server %s initialized successfully", mcp_app)
+        async with client:
+            yield {
+                "fca_app": app.FcaApp(fca_api=client),
+                "_cache_store": cache_store,
+            }
+
     logger.info("Server shutdown complete")
 
 
@@ -62,6 +70,7 @@ def get_server() -> fastmcp.FastMCP:
     markets), wires up the middleware stack, and installs the configured
     auth provider.
     """
+    settings = fca_mcp.settings.get_settings()
     main = fastmcp.FastMCP(
         f"Release.art public MCP v{fca_mcp.__version__.__version__}",
         lifespan=mcp_lifespan,
@@ -78,6 +87,10 @@ def get_server() -> fastmcp.FastMCP:
         auth=auth.provider.get_auth_provider(),
         middleware=[
             AuthMiddleware(auth=restrict_tag(auth.tags.FCA_API_RO, scopes=[auth.scopes.FCA_API_RO])),
+            ErrorHandlingMiddleware(),
+            RateLimitingMiddleware(),
+            LoggingMiddleware(),
+            _cache_middleware.FcaCachingMiddleware(ttl_seconds=settings.cache.ttl_seconds),
         ],
     )
     main.mount(search.get_server())
@@ -85,7 +98,4 @@ def get_server() -> fastmcp.FastMCP:
     main.mount(funds.get_server())
     main.mount(individuals.get_server())
     main.mount(markets.get_server())
-    main.add_middleware(ErrorHandlingMiddleware())
-    main.add_middleware(RateLimitingMiddleware())
-    main.add_middleware(LoggingMiddleware())
     return main

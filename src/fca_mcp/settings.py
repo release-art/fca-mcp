@@ -7,12 +7,39 @@ import enum
 import functools
 import logging
 import os
+import re
 from typing import Annotated, Any, Literal, Union
 
-from pydantic import Field, HttpUrl, field_validator, model_validator
+from pydantic import Field, GetCoreSchemaHandler, HttpUrl, field_validator, model_validator
+from pydantic_core import core_schema
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
+
+_AZURE_TABLE_NAME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9]{2,62}$")
+
+
+class AzureTableName(str):
+    """Validated Azure Table Storage table name.
+
+    Must be 3-63 alphanumeric characters starting with a letter.
+    Hyphens, underscores, and other symbols are not permitted by Azure.
+    """
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+        return core_schema.no_info_plain_validator_function(cls._validate)
+
+    @classmethod
+    def _validate(cls, v: object) -> AzureTableName:
+        if not isinstance(v, str):
+            raise ValueError(f"Expected str, got {type(v).__name__}")
+        if not _AZURE_TABLE_NAME_RE.match(v):
+            raise ValueError(
+                f"'{v}' is not a valid Azure Table Storage name. "
+                "Must be 3-63 alphanumeric characters starting with a letter (no hyphens or other symbols)."
+            )
+        return cls(v)
 
 
 @enum.unique
@@ -111,7 +138,7 @@ class BlobStoreNamesSettings(BaseSettings):
 class TableStoreNamesSettings(BaseSettings):
     """Names of Azure Table Storage tables used by the application.
 
-    Each field maps to the table name for a specific internal store,
+    Each field maps to a table name **prefix** for a specific internal store,
     configurable via the ``TABLE_STORE_NAME_*`` environment variables.
     """
 
@@ -121,12 +148,36 @@ class TableStoreNamesSettings(BaseSettings):
     )
 
     api_cache: Annotated[
-        str,
+        AzureTableName,
         Field(
-            default="api-cache",
-            description="Container name for the API response cache store.",
+            default="apicache",
+            description=(
+                "Prefix for the API response cache table. The active table is named "
+                "'{prefix}{cache_version_slug}', e.g. 'apicache00'. "
+                "Bump __version__.cache_version to invalidate all cached entries on significant API changes; "
+                "stale tables are deleted on startup and surviving entries expire via their TTL."
+            ),
         ),
     ]
+
+
+class CacheSettings(BaseSettings):
+    """API response cache configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="CACHE_",
+        extra="forbid",
+    )
+
+    ttl_seconds: Annotated[
+        int,
+        Field(
+            default=86400,
+            gt=0,
+            description="API response cache TTL in seconds (default: 86400 = 24 hours).",
+        ),
+    ]
+
 
 class _BaseAuth0Settings(BaseSettings):
     """Common Auth0 settings shared by all auth modes."""
@@ -369,8 +420,8 @@ class Settings(BaseSettings):
     # Nested settings
     azure: Annotated[AzureSettings, Field(default_factory=AzureSettings)]
     blob_store_names: Annotated[BlobStoreNamesSettings, Field(default_factory=BlobStoreNamesSettings)]
-    table_store_names: Annotated[
-        TableStoreNamesSettings, Field(default_factory=TableStoreNamesSettings)]
+    table_store_names: Annotated[TableStoreNamesSettings, Field(default_factory=TableStoreNamesSettings)]
+    cache: Annotated[CacheSettings, Field(default_factory=CacheSettings)]
     auth0: Auth0Settings
     fca_api: Annotated[FcaApiSettings, Field(default_factory=FcaApiSettings)]
 
