@@ -108,6 +108,25 @@ class BlobStoreNamesSettings(BaseSettings):
         ),
     ]
 
+class TableStoreNamesSettings(BaseSettings):
+    """Names of Azure Table Storage tables used by the application.
+
+    Each field maps to the table name for a specific internal store,
+    configurable via the ``TABLE_STORE_NAME_*`` environment variables.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="TABLE_STORE_NAME_",
+        extra="forbid",
+    )
+
+    api_cache: Annotated[
+        str,
+        Field(
+            default="api-cache",
+            description="Container name for the API response cache store.",
+        ),
+    ]
 
 class _BaseAuth0Settings(BaseSettings):
     """Common Auth0 settings shared by all auth modes."""
@@ -350,6 +369,8 @@ class Settings(BaseSettings):
     # Nested settings
     azure: Annotated[AzureSettings, Field(default_factory=AzureSettings)]
     blob_store_names: Annotated[BlobStoreNamesSettings, Field(default_factory=BlobStoreNamesSettings)]
+    table_store_names: Annotated[
+        TableStoreNamesSettings, Field(default_factory=TableStoreNamesSettings)]
     auth0: Auth0Settings
     fca_api: Annotated[FcaApiSettings, Field(default_factory=FcaApiSettings)]
 
