@@ -99,4 +99,4 @@ class AzureAPI:
 
     def get_table(self, table_name: str) -> azure_tables_aio.TableClient:
         """Get a TableClient for the specified table."""
-        return self.table_service_client.get_table_client(table=table_name)
+        return self.table_service_client.get_table_client(table_name)

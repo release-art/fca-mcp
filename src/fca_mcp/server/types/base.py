@@ -1,7 +1,9 @@
 import typing
+from typing import Self
 
 import fca_api.types
 import pydantic
+from pydantic_core import PydanticUndefined
 
 ModelT = typing.TypeVar("ModelT", bound=pydantic.BaseModel)
 
@@ -10,9 +12,8 @@ class ReflectedFcaApiModelT(pydantic.BaseModel, typing.Generic[ModelT]):
     """Base class for reflected FCA API models with conversion support."""
 
     @classmethod
-    def from_api_t(cls, data: ModelT) -> "ReflectedFcaApiModelT[ModelT]":
-        """Convert the reflected model back to the original model type."""
-        return cls.model_validate(data.model_dump(mode="python"))
+    def from_api_t(cls, data: ModelT) -> Self:
+        return cls.model_validate(data.model_dump(mode="python"))  # type: ignore[return-value]
 
 
 def reflect_fca_api_t(
@@ -43,7 +44,7 @@ def reflect_fca_api_t(
             # This is a child model, we need to reflect it as well
             field_t = reflect_fca_api_t(field.annotation, exclude_fields)
         # Handle required and default values
-        if field.default is pydantic.fields.PydanticUndefined:
+        if field.default is PydanticUndefined:
             fields[name] = (field_t, ...)
         else:
             fields[name] = (field_t, field.default)

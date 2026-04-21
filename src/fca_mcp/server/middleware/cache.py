@@ -10,11 +10,12 @@ import azure.data.tables.aio as azure_tables_aio
 import mcp.types
 from fastmcp.server.middleware.caching import ResponseCachingMiddleware
 from fastmcp.server.middleware.middleware import CallNext, Middleware, MiddlewareContext
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 from key_value.aio.protocols.key_value import AsyncKeyValue
 from typing_extensions import override
 
 import fca_mcp.__version__ as _fca_version
+import fca_mcp.settings
 from fca_mcp.azure.api import AzureAPI
 from fca_mcp.azure.table_key_value import AzureTableStore
 
@@ -43,7 +44,7 @@ async def _cleanup_stale_cache_tables(
     (e.g. from a concurrent instance) expire naturally via their configured TTL.
     """
     async for table_props in table_service_client.list_tables():
-        name = table_props["TableName"]
+        name = table_props.name
         if name.startswith(prefix) and name != active_table:
             logger.info("Deleting stale cache table: %s", name)
             await table_service_client.delete_table(name)

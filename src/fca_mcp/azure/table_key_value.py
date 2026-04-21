@@ -59,10 +59,9 @@ class AzureTableStore(BaseContextManagerStore, BaseEnumerateKeysStore, BaseStore
         try:
             await self._table_service_client.create_table(self._table_name)
         except HttpResponseError as e:
-            if e.error_code != "TableAlreadyExists":
+            if e.error_code != "TableAlreadyExists":  # type: ignore[attr-defined]
                 raise
 
-    @override
     async def _close(self) -> None:
         pass  # TableServiceClient lifecycle is managed externally by AzureAPI
 

@@ -78,7 +78,7 @@ def get_server() -> fastmcp.FastMCP:
         icons=[
             Icon(
                 src="https://static.release.art/assets/icons/brandmark_blue.svg",
-                type="image/svg",
+                mimeType="image/svg+xml",
                 sizes=["any"],
             )
         ],

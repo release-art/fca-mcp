@@ -418,23 +418,23 @@ class Settings(BaseSettings):
     ]
 
     # Nested settings
-    azure: Annotated[AzureSettings, Field(default_factory=AzureSettings)]
-    blob_store_names: Annotated[BlobStoreNamesSettings, Field(default_factory=BlobStoreNamesSettings)]
-    table_store_names: Annotated[TableStoreNamesSettings, Field(default_factory=TableStoreNamesSettings)]
-    cache: Annotated[CacheSettings, Field(default_factory=CacheSettings)]
+    azure: Annotated[AzureSettings, Field(default_factory=lambda: AzureSettings())]  # type: ignore[call-arg]
+    blob_store_names: Annotated[BlobStoreNamesSettings, Field(default_factory=lambda: BlobStoreNamesSettings())]  # type: ignore[call-arg]
+    table_store_names: Annotated[TableStoreNamesSettings, Field(default_factory=lambda: TableStoreNamesSettings())]  # type: ignore[call-arg]
+    cache: Annotated[CacheSettings, Field(default_factory=lambda: CacheSettings())]  # type: ignore[call-arg]
     auth0: Auth0Settings
-    fca_api: Annotated[FcaApiSettings, Field(default_factory=FcaApiSettings)]
+    fca_api: Annotated[FcaApiSettings, Field(default_factory=lambda: FcaApiSettings())]  # type: ignore[call-arg]
 
     @model_validator(mode="before")
     @classmethod
     def _build_auth0(cls, data: Any) -> Any:
         if isinstance(data, dict) and "auth0" not in data:
             mode = os.environ.get("AUTH0_MODE", AuthMode.REMOTE)
-            data["auth0"] = ProxyAuth0Settings() if mode == AuthMode.PROXY else RemoteAuth0Settings()
+            data["auth0"] = ProxyAuth0Settings() if mode == AuthMode.PROXY else RemoteAuth0Settings()  # type: ignore[call-arg]
         return data
 
-    server: Annotated[ServerSettings, Field(default_factory=ServerSettings)]
-    logging: Annotated[LoggingSettings, Field(default_factory=LoggingSettings)]
+    server: Annotated[ServerSettings, Field(default_factory=lambda: ServerSettings())]  # type: ignore[call-arg]
+    logging: Annotated[LoggingSettings, Field(default_factory=lambda: LoggingSettings())]  # type: ignore[call-arg]
 
     # Additional top-level settings
     cors_origins: Annotated[
@@ -469,7 +469,7 @@ def get_settings() -> Settings:
         Settings: The global settings instance
     """
     try:
-        return Settings()
+        return Settings()  # type: ignore[call-arg]
     except Exception as e:
         logger.error(
             "Failed to construct Settings. Environment variables:",
