@@ -1,3 +1,4 @@
+import contextlib
 import pathlib
 
 import fca_api
@@ -5,6 +6,7 @@ import pytest
 import pytest_asyncio
 from fastmcp.client import Client
 from fastmcp.server.auth import AccessToken
+from key_value.aio.stores.memory import MemoryStore
 
 import fca_mcp
 from fca_mcp.server.auth import scopes as auth_scopes
@@ -15,6 +17,20 @@ def resources_dir() -> pathlib.Path:
     out = pathlib.Path(__file__).parent / "resources"
     assert out.is_dir(), f"Resources directory not found at {out}"
     return out.resolve()
+
+
+@pytest.fixture(autouse=True)
+def mock_azure_cache(mocker):
+    """Replace the Azure Table cache backend with an in-memory store.
+
+    Patches _open_azure_cache so tests run without real Azure infrastructure.
+    """
+
+    @contextlib.asynccontextmanager
+    async def _mock(_settings):
+        yield MemoryStore()
+
+    mocker.patch("fca_mcp.server.middleware.cache.open_azure_cache", _mock)
 
 
 @pytest.fixture(autouse=True)

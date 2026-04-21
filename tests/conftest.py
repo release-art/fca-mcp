@@ -24,6 +24,12 @@ def test_settings() -> fca_mcp.settings.Settings:
         blob_store_names=fca_mcp.settings.BlobStoreNamesSettings(
             auth0_clients="test-auth0-clients",
         ),
+        table_store_names=fca_mcp.settings.TableStoreNamesSettings(
+            api_cache="apicache",
+        ),
+        cache=fca_mcp.settings.CacheSettings(
+            ttl_seconds=3600,
+        ),
         auth0=fca_mcp.settings.RemoteAuth0Settings(
             domain="test.auth0.com",
             audience="https://test-api.example.com",

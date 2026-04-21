@@ -11,7 +11,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 from starlette.requests import Request
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, JSONResponse
 
 import fca_mcp.settings
 
@@ -28,14 +28,16 @@ _jinja_env = Environment(
 
 
 # @interactive_router.get("/config")
-async def interactive_config(request: Request) -> dict:
+async def interactive_config(request: Request) -> JSONResponse:
     """Return Auth0 config for the SPA SDK (public, non-secret values only)."""
     settings = fca_mcp.settings.get_settings()
-    return {
-        "auth0_domain": settings.auth0.domain,
-        "auth0_audience": settings.auth0.audience,
-        "auth0_client_id": settings.auth0.interactive_client_id,
-    }
+    return JSONResponse(
+        {
+            "auth0_domain": settings.auth0.domain,
+            "auth0_audience": settings.auth0.audience,
+            "auth0_client_id": settings.auth0.interactive_client_id,
+        }
+    )
 
 
 # @interactive_router.get("/", response_class=HTMLResponse)
