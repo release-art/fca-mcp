@@ -10,7 +10,7 @@ import fca_api
 import jwt
 from fastmcp.server.auth import restrict_tag
 from fastmcp.server.lifespan import lifespan
-from fastmcp.server.middleware import AuthMiddleware
+from fastmcp.server.middleware import AuthMiddleware, Middleware
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
@@ -70,6 +70,22 @@ def get_server() -> fastmcp.FastMCP:
     auth provider.
     """
     settings = fca_mcp.settings.get_settings()
+    auth_provider = auth.provider.get_auth_provider()
+
+    # Only gate tools on the fca-api:read scope when an auth provider is configured.
+    # With AUTH0_MODE=none there is no access token, and restrict_tag would reject
+    # every tagged tool — which is all of them — hiding them from tools/list.
+    middleware_stack: list[Middleware | None] = [
+        (
+            AuthMiddleware(auth=restrict_tag(auth.tags.FCA_API_RO, scopes=[auth.scopes.FCA_API_RO]))
+            if auth_provider is not None
+            else None
+        ),
+        ErrorHandlingMiddleware(include_traceback=settings.debug),
+        RateLimitingMiddleware(),
+        LoggingMiddleware(),
+        middleware.cache.FcaCachingMiddleware(ttl_seconds=settings.cache.ttl_seconds),
+    ]
     main = fastmcp.FastMCP(
         f"Release.art public MCP v{fca_mcp.__version__.__version__}",
         lifespan=mcp_lifespan,
@@ -83,14 +99,8 @@ def get_server() -> fastmcp.FastMCP:
         ],
         on_duplicate="error",
         strict_input_validation=True,
-        auth=auth.provider.get_auth_provider(),
-        middleware=[
-            AuthMiddleware(auth=restrict_tag(auth.tags.FCA_API_RO, scopes=[auth.scopes.FCA_API_RO])),
-            ErrorHandlingMiddleware(include_traceback=settings.debug),
-            RateLimitingMiddleware(),
-            LoggingMiddleware(),
-            middleware.cache.FcaCachingMiddleware(ttl_seconds=settings.cache.ttl_seconds),
-        ],
+        auth=auth_provider,
+        middleware=[m for m in middleware_stack if m is not None],
     )
     main.mount(search.get_server())
     main.mount(firms.get_server())

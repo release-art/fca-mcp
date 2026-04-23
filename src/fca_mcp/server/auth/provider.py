@@ -75,9 +75,13 @@ def _get_proxy_auth_provider(auth0: fca_mcp.settings.ProxyAuth0Settings) -> Auth
     )
 
 
-def get_auth_provider() -> AuthProvider:
+def get_auth_provider() -> AuthProvider | None:
     """Get the authentication provider based on configured auth mode."""
     settings = fca_mcp.settings.get_settings()
+
+    if isinstance(settings.auth0, fca_mcp.settings.NoneAuth0Settings):
+        logger.info("Authentication disabled (auth_mode=none)")
+        return None
 
     if isinstance(settings.auth0, fca_mcp.settings.RemoteAuth0Settings):
         logger.info("Using RemoteAuthProvider (JWT verification only)")

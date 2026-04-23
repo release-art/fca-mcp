@@ -48,6 +48,7 @@ class AuthMode(enum.StrEnum):
 
     REMOTE = "remote"
     PROXY = "proxy"
+    NONE = "none"
 
 
 @enum.unique
@@ -202,13 +203,12 @@ class _BaseAuth0Settings(BaseSettings):
             description="Auth0 API audience identifier",
         ),
     ]
-    interactive_client_id: Annotated[
-        str | None,
-        Field(
-            default=None,
-            description="Auth0 SPA client ID for the interactive web UI",
-        ),
-    ]
+
+
+class NoneAuth0Settings(BaseSettings):
+    """Auth0 settings for no authentication mode."""
+
+    mode: Literal[AuthMode.NONE] = AuthMode.NONE
 
 
 class RemoteAuth0Settings(_BaseAuth0Settings):
@@ -264,7 +264,7 @@ class ProxyAuth0Settings(_BaseAuth0Settings):
 
 
 Auth0Settings = Annotated[
-    Union[RemoteAuth0Settings, ProxyAuth0Settings],
+    Union[NoneAuth0Settings, RemoteAuth0Settings, ProxyAuth0Settings],
     Field(discriminator="mode"),
 ]
 
@@ -431,7 +431,15 @@ class Settings(BaseSettings):
     def _build_auth0(cls, data: Any) -> Any:
         if isinstance(data, dict) and "auth0" not in data:
             mode = os.environ.get("AUTH0_MODE", AuthMode.REMOTE)
-            data["auth0"] = ProxyAuth0Settings() if mode == AuthMode.PROXY else RemoteAuth0Settings()  # type: ignore[call-arg]
+            if mode == AuthMode.NONE:
+                mode_obj: NoneAuth0Settings | RemoteAuth0Settings | ProxyAuth0Settings = NoneAuth0Settings()
+            elif mode == AuthMode.PROXY:
+                mode_obj = ProxyAuth0Settings()  # type: ignore[call-arg]
+            elif mode == AuthMode.REMOTE:
+                mode_obj = RemoteAuth0Settings()  # type: ignore[call-arg]
+            else:
+                raise ValueError(f"Invalid AUTH0_MODE '{mode}'; must be one of {[m.value for m in AuthMode]}")
+            data["auth0"] = mode_obj
         return data
 
     server: Annotated[ServerSettings, Field(default_factory=lambda: ServerSettings())]  # type: ignore[call-arg]
