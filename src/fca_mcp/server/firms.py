@@ -41,6 +41,10 @@ async def get_firm(frn: FrnParam, fca_client: fca_api.async_api.Client = deps.Fc
     If you do not have an FRN, call search_frn first with the firm name. Returns core
     firm details only — use the other get_firm_* tools for specific aspects like
     permissions, individuals, addresses, or disciplinary history.
+
+    The response includes a companies_house_number field identifying the firm's UK corporate record —
+    use it as the company_number argument to Companies House tools (company profile, PSCs,
+    officers, filing history) when those are available.
     """
     result = await fca_client.get_firm(frn)
     return types.firm.FirmDetails.from_api_t(result)
@@ -118,6 +122,9 @@ async def get_firm_individuals(
     find out who holds regulated roles at a firm. If you do not have an FRN, call
     search_frn first. For detailed information about a specific individual, use their IRN
     with get_individual.
+
+    Individuals listed here often also appear as Companies House officers — to see their wider
+    directorship history, search for them by name in Companies House and fetch their appointments.
     """
     out = await fca_client.get_firm_individuals(frn, next_page=next_page_token)
     return types.pagination.MultipageList[types.firm.FirmIndividual](
