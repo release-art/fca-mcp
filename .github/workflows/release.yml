@@ -21,6 +21,7 @@ jobs:
   publish-package:
     needs: start
     runs-on: ubuntu-latest
+    environment: release
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python
@@ -48,6 +49,7 @@ jobs:
   publish-image:
     needs: start
     runs-on: ubuntu-latest
+    environment: release
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
