@@ -1,5 +1,9 @@
 # FCA Register MCP Server
 
+[![CI](https://github.com/release-art/fca-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/release-art/fca-mcp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
+[![PyPI version](https://img.shields.io/pypi/v/fca-mcp?logo=python&color=41bb13)](https://pypi.org/project/fca-mcp)
+
 A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes the UK [FCA Financial Services Register](https://register.fca.org.uk/) to LLM clients as a set of read-only tools. Built on [FastMCP v3](https://gofastmcp.com/) and the [`fca-api`](https://github.com/release-art/fca-api) async client.
 
 ## Overview
